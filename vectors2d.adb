@@ -1,0 +1,50 @@
+package body Vectors2D is
+   
+   function "+" (Left, Right : Vec2D) return Vec2D is
+   begin
+      return Vec2D'(x => Left.x + Right.x, y => Left.y + Right.y);
+   end "+";
+   
+   function "-" (Left, Right : Vec2D) return Vec2D is
+   begin
+      return Vec2D'(x => Left.x - Right.x, y => Left.y - Right.y);
+   end "-";
+   
+   -- unary minus
+   function "-" (Right : Vec2D) return Vec2D is
+   begin
+      return Vec2D'(x => -Right.x, y => -Right.y);
+   end "-";
+   
+   -- scalar product
+   function "*" (Left, Right : Vec2D) return Float is
+   begin
+      return (Left.x * Right.x) + (Left.y * Right.y);
+   end "*";
+   
+   function "*" (Left : Float; Right : Vec2D) return Vec2D is
+   begin
+      return Vec2D'(x => Left * Right.x, y => Left * Right.y);
+   end "*";
+   
+   function "*" (Left : Vec2D; Right : Float) return Vec2D is
+   begin
+      return Vec2D'(x => Left.x * Right, y => Left.y * Right);
+   end "*";
+   
+   function "/" (Left : Vec2D; Right : Float) return Vec2D is
+   begin
+      return Vec2D'(x => Left.x / Right, y => Left.y / Right);
+   end "/";
+
+   function MagSq(This : Vec2D) return Float is
+   begin
+      return (This.x * This.x) + (This.y * This.y);
+   end MagSq;
+   
+   function Mag(This : Vec2D) return Float is
+   begin
+      return Sqrt(MagSq(This));
+   end Mag;
+   
+end Vectors2D;
