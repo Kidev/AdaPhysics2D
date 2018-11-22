@@ -5,7 +5,8 @@ package body Circles is
                         Pos, Vel : in Vec2D; Mass, Rest, Grav : in Float)
    is
    begin
-      Entities.Initialize(Entity(This.all), EntCircle, Pos, Vel, Mass, Rest, Grav);
+      Entities.Initialize(Entities.Entity(This.all),
+                          Entities.EntCircle, Pos, Vel, Mass, Rest, Grav);
    end Initialize;  
   
    -- Create a new Circle

@@ -1,4 +1,39 @@
 package body Collisions is
+   
+   function Collide(A, B : not null access Entity'Class; Col : out Collision)
+   return Boolean
+   is
+   begin
+      
+      Col.A := A;
+      Col.B := B;
+      
+      if A.all.EntityType = EntCircle then
+         return CircleOnX(Circles.CircleAcc(A), B, Col);
+      elsif B.all.EntityType = EntCircle then
+         return CircleOnX(Circles.CircleAcc(B), A, Col);
+      end if;
+
+      return False;
+
+   end Collide;
+   
+   function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class;
+                      Col : out Collision) return Boolean
+   is
+   begin
+      case B.all.EntityType is
+         when EntCircle => return CircleOnCircle(A, Circles.CircleAcc(B), Col);
+      end case;
+   end CircleOnX;
+
+   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean
+   is
+   begin
+      Col.Normal := A.all.Velocity;
+      Col.Penetration := B.all.InvMass;
+      return True;
+   end CircleOnCircle;
 
    procedure Resolve(Col : in Collision) is
       RelVel : Vec2D;

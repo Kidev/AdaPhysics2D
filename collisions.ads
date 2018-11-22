@@ -1,4 +1,5 @@
-limited with Entities;
+with Entities; use Entities;
+with Circles;
 with Vectors2D; use Vectors2D;
 
 package Collisions is
@@ -6,11 +7,14 @@ package Collisions is
    -- Collision type, holding meaningful information
    -- about a collision
    type Collision is limited record
-      A : access Entities.Entity'Class;
-      B : access Entities.Entity'Class;
+      A : access Entity'Class;
+      B : access Entity'Class;
       Normal : Vec2D;
       Penetration : Float;
    end record;
+   
+   function Collide(A, B : not null access Entity'Class; Col : out Collision)
+                    return Boolean;
    
    -- This procedure is called when there is a collision
    -- It impulses on A and B so that they no longer collide
@@ -19,5 +23,11 @@ package Collisions is
    -- This procedure, called after the collision resolution
    -- Ensures that objects do not sink in each other
    procedure PosCorrection(Col : in Collision);
+   
+private
+   
+   function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class;
+                     Col : out Collision) return Boolean;
+   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean;
 
 end Collisions;
