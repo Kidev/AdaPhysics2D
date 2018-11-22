@@ -1,4 +1,5 @@
 with Entities; use Entities;
+with Vectors2D; use Vectors2D;
 
 package Circles is
    
@@ -8,15 +9,8 @@ package Circles is
    -- Create a new Circle
    function Create(Pos, Vel : in Vec2D; Mass, Rest, Grav : in Float) return CircleAcc;
    
-private
-   
    -- Initialization of a Circle
-   procedure Initialize(This : in out CircleAcc;
+   procedure Initialize(This : in CircleAcc;
                         Pos, Vel : in Vec2D; Mass, Rest, Grav : in Float);
-
-   -- Defines the collision algorithm for a Circle
-   overriding
-   function Collide(This, That : in CircleAcc; in out Col : Collision)
-   return Boolean is abstract;
 
 end Circles;

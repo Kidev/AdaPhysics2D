@@ -1,12 +1,13 @@
-limited with Entities; use Entities;
+limited with Entities;
+with Vectors2D; use Vectors2D;
 
 package Collisions is
 
    -- Collision type, holding meaningful information
    -- about a collision
    type Collision is limited record
-      A : access Entity'Class;
-      B : access Entity'Class;
+      A : access Entities.Entity'Class;
+      B : access Entities.Entity'Class;
       Normal : Vec2D;
       Penetration : Float;
    end record;
