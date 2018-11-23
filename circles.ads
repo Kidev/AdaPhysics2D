@@ -9,12 +9,12 @@ package Circles is
    type CircleAcc is access all Circle'Class;
   
    -- Create a new Circle
-   function Create(Pos, Vel : in Vec2D; Mass, Rest, Grav, Rad : in Float) return CircleAcc;
+   function Create(Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float) return CircleAcc;
    
 private
    
    -- Initialization of a Circle
    procedure Initialize(This : in CircleAcc;
-                        Pos, Vel : in Vec2D; Mass, Rest, Grav, Rad : in Float);
+                        Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float);
 
 end Circles;

@@ -11,12 +11,13 @@ package Entities is
       EntityType : EntityTypes;
       Coords : Vec2D;
       Velocity : Vec2D;
+      Force : Vec2D;
       InvMass : Float;
       Restitution : Float;
-      Gravity : Float;
+      Gravity : Vec2D;
    end record;
    
    procedure Initialize(This : out Entity; EntType : in EntityTypes;
-                        Pos, Vel : in Vec2D; Mass, Rest, Grav : in Float); 
+                        Pos, Vel, Grav : in Vec2D; Mass, Rest : in Float);
 
 end Entities;

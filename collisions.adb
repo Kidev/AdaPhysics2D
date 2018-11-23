@@ -5,7 +5,8 @@ package body Collisions is
    is
    begin
       
-      -- /!\ Strange warnings here and on the elsif ?
+      -- /!\ Strange warnings here and on the elsif (lines 10 & 12) ?
+      -- /!\ warning: condition can only be False if invalid values present
       if A.all.EntityType = EntCircle then
          return CircleOnX(Circles.CircleAcc(A), B, Col);
       elsif B.all.EntityType = EntCircle then
