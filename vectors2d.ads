@@ -17,6 +17,9 @@ package Vectors2D is
    -- unary minus
    function "-" (Right : Vec2D) return Vec2D;
    
+   -- unary plus, replacement for 'Image
+   function "+" (Right : Vec2D) return String;
+   
    -- scalar product
    function "*" (Left, Right : Vec2D) return Float;
    

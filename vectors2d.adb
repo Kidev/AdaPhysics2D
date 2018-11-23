@@ -16,6 +16,12 @@ package body Vectors2D is
       return Vec2D'(x => -Right.x, y => -Right.y);
    end "-";
    
+   -- unary plus, replacement for 'Image
+   function "+" (Right : Vec2D) return String is
+   begin
+      return "[" & Right.x'Image & ";" & Right.y'Image & "]";
+   end "+";
+   
    -- scalar product
    function "*" (Left, Right : Vec2D) return Float is
    begin

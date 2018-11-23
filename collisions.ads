@@ -13,6 +13,8 @@ package Collisions is
       Penetration : Float;
    end record;
    
+   -- Return True if A collides with B; else false
+   -- Fills Col with data about the collision
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
                     return Boolean;
    

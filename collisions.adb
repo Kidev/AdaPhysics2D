@@ -5,9 +5,7 @@ package body Collisions is
    is
    begin
       
-      Col.A := A;
-      Col.B := B;
-      
+      -- /!\ Strange warnings here and on the elsif ?
       if A.all.EntityType = EntCircle then
          return CircleOnX(Circles.CircleAcc(A), B, Col);
       elsif B.all.EntityType = EntCircle then
@@ -29,10 +27,33 @@ package body Collisions is
 
    function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean
    is
+      NormalVec : Vec2D;
+      TotRadius : Float;
+      Distance : Float;
    begin
-      Col.Normal := A.all.Velocity;
-      Col.Penetration := B.all.InvMass;
+      
+      NormalVec := B.all.Coords - A.all.Coords;
+      TotRadius := A.all.Radius + B.all.Radius;
+      
+      if MagSq(NormalVec) > (TotRadius * TotRadius) then
+         return False; -- Not colliding
+      end if;
+      
+      Distance := Mag(NormalVec);
+      
+      if Distance /= 0.0 then
+         Col.Penetration := TotRadius - Distance;
+         Col.Normal := NormalVec / Distance;
+      else
+         Col.Penetration := A.all.Radius;
+         Col.Normal := Vec2D'(1.0, 0.0);
+      end if;
+
+      Col.A := A;
+      Col.B := B;
+
       return True;
+
    end CircleOnCircle;
 
    procedure Resolve(Col : in Collision) is
@@ -44,6 +65,9 @@ package body Collisions is
       A : constant access Entity'Class := Col.A;
       B : constant access Entity'Class := Col.B;
    begin
+      -- /!\ If objects are immobile relative to each other
+      -- /!\ This make cause problems in 0g
+      -- /!\ A fix might be to add 0.01 in this case
       RelVel := B.Velocity - A.Velocity;
       VelNormal := RelVel * Col.Normal;
 
