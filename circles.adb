@@ -1,5 +1,5 @@
 package body Circles is
-   
+
    -- Initialization of a Circle
    procedure Initialize(This : in CircleAcc;
                         Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float)
@@ -8,8 +8,8 @@ package body Circles is
       Entities.Initialize(Entities.Entity(This.all),
                           Entities.EntCircle, Pos, Vel, Grav, Mass, Rest);
       This.all.Radius := Rad;
-   end Initialize;  
-  
+   end Initialize;
+
    -- Create a new Circle
    function Create(Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float) return CircleAcc
    is

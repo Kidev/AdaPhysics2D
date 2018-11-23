@@ -1,7 +1,7 @@
 with Vectors2D; use Vectors2D;
 
 package Entities is
-      
+
    -- List all the entity types
    type EntityTypes is (EntCircle);
 
@@ -16,7 +16,7 @@ package Entities is
       Restitution : Float;
       Gravity : Vec2D;
    end record;
-   
+
    procedure Initialize(This : out Entity; EntType : in EntityTypes;
                         Pos, Vel, Grav : in Vec2D; Mass, Rest : in Float);
 

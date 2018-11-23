@@ -11,15 +11,17 @@ package body Worlds is
       This.dt := dt;
       This.Entities := (others => null);
    end Init;
-   
+
    -- Add entity to the world
    procedure Add(This : in out World; Ent : not null access Entity'Class)
    is
    begin
-      This.Index := This.Index + 1;
-      This.Entities(This.Index) := Ent;
+      if This.Index < EntArrIndex'Last then
+         This.Index := This.Index + 1;
+         This.Entities(This.Index) := Ent;
+      end if;
    end Add;
-   
+
    -- Update the world of dt
    procedure Step(This : in out World)
    is
@@ -38,29 +40,29 @@ package body Worlds is
             end if;
          end loop;
       end loop;
-      
+
       for I in 1 .. This.Index loop
          IntForce(This.Entities(I), This.dt);
       end loop;
-      
+
       for I in 0 .. Count - 1 loop
          Resolve(Cols(I));
       end loop;
-      
+
       for I in 1 .. This.Index loop
          IntVelocity(This.Entities(I), This.dt);
       end loop;
-      
+
       for I in 0 .. Count - 1 loop
          PosCorrection(Cols(I));
       end loop;
-      
+
       for I in 1 .. This.Index loop
          ResetForces(This.Entities(I));
       end loop;
-         
+
    end Step;
-   
+
    procedure ResetForces(Ent : not null access Entity'Class)
    is
    begin
@@ -74,7 +76,7 @@ package body Worlds is
          Ent.all.Velocity := Ent.all.Velocity + ((Ent.InvMass * Ent.Force) + Ent.Gravity) * dt;
       end if;
    end IntForce;
-   
+
    procedure IntVelocity(Ent : not null access Entity'Class; dt : Float)
    is
    begin
