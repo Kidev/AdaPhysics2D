@@ -22,6 +22,16 @@ package body Worlds is
       end if;
    end Add;
 
+   function GetEntities(This : in out World) return EArray
+   is
+      Ret : EArray (1 .. This.Index);
+   begin
+      for I in Ret'Range loop
+         Ret(I) := This.Entities(I);
+      end loop;
+      return Ret;
+   end;
+
    -- Update the world of dt
    procedure Step(This : in out World)
    is
