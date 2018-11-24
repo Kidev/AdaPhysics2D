@@ -13,6 +13,12 @@ package body Collisions is
          return CircleOnX(Circles.CircleAcc(B), A, Col);
       end if;
 
+      if A.all.EntityType = EntRectangle then
+         return RectangleOnX(Rectangles.RectangleAcc(A), B, Col);
+      elsif B.all.EntityType = EntRectangle then
+         return RectangleOnX(Rectangles.RectangleAcc(B), A, Col);
+      end if;
+
       return False;
 
    end Collide;
@@ -23,8 +29,19 @@ package body Collisions is
    begin
       case B.all.EntityType is
          when EntCircle => return CircleOnCircle(A, Circles.CircleAcc(B), Col);
+         when EntRectangle => return RectangleOnCircle(Rectangles.RectangleAcc(B), A, Col);
       end case;
    end CircleOnX;
+
+   function RectangleOnX(A : in Rectangles.RectangleAcc; B : access Entity'Class; Col : out Collision)
+                         return Boolean
+   is
+   begin
+      case B.all.EntityType is
+         when EntCircle => return RectangleOnCircle(A, Circles.CircleAcc(B), Col);
+         when EntRectangle => return RectangleOnRectangle(A, Rectangles.RectangleAcc(B), Col);
+      end case;
+   end RectangleOnX;
 
    function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean
    is
@@ -57,6 +74,20 @@ package body Collisions is
 
    end CircleOnCircle;
 
+   function RectangleOnRectangle(A, B : in Rectangles.RectangleAcc; Col : out Collision)
+                                 return Boolean
+   is
+   begin
+      return False;
+   end RectangleOnRectangle;
+
+   function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
+                              return Boolean
+   is
+   begin
+      return False;
+   end RectangleOnCircle;
+
    procedure Resolve(Col : in Collision) is
       RelVel : Vec2D;
       VelNormal : Float;
@@ -67,7 +98,7 @@ package body Collisions is
       B : constant access Entity'Class := Col.B;
    begin
       -- /!\ If objects are immobile relative to each other
-      -- /!\ This make cause problems in 0g
+      -- /!\ This may cause problems in 0g
       -- /!\ A fix might be to add 0.01 in this case
       RelVel := B.Velocity - A.Velocity;
       VelNormal := RelVel * Col.Normal;

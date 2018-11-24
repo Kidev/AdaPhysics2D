@@ -1,5 +1,6 @@
 with Entities; use Entities;
 with Circles;
+with Rectangles;
 with Vectors2D; use Vectors2D;
 
 package Collisions is
@@ -28,8 +29,18 @@ package Collisions is
 
 private
 
-   function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class;
-                     Col : out Collision) return Boolean;
-   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean;
+   function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class; Col : out Collision)
+                      return Boolean;
+   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision)
+                           return Boolean;
+
+   function RectangleOnX(A : in Rectangles.RectangleAcc; B : access Entity'Class; Col : out Collision)
+                         return Boolean;
+
+   function RectangleOnRectangle(A, B : in Rectangles.RectangleAcc; Col : out Collision)
+                                 return Boolean;
+
+   function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
+                         return Boolean;
 
 end Collisions;

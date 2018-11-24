@@ -3,7 +3,7 @@ with Vectors2D; use Vectors2D;
 package Entities is
 
    -- List all the entity types
-   type EntityTypes is (EntCircle);
+   type EntityTypes is (EntCircle, EntRectangle);
 
    -- Abstract superclass of all entities
    -- Lists the minimum fields for an entity to exist
