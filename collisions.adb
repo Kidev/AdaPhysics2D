@@ -5,6 +5,9 @@ package body Collisions is
    is
    begin
 
+      Col.A := A;
+      Col.B := B;
+
       -- /!\ Strange warnings here and on the elsif (lines 10 & 12) ?
       -- /!\ warning: condition can only be False if invalid values present
       if A.all.EntityType = EntCircle then
@@ -67,8 +70,8 @@ package body Collisions is
          Col.Normal := Vec2D'(1.0, 0.0);
       end if;
 
-      Col.A := A;
-      Col.B := B;
+--      Col.A := A;
+--      Col.B := B;
 
       return True;
 
@@ -77,8 +80,47 @@ package body Collisions is
    function RectangleOnRectangle(A, B : in Rectangles.RectangleAcc; Col : out Collision)
                                  return Boolean
    is
+      Normal : Vec2D;
+      AMid, BMid : Float;
+      xOverlap, yOverlap : Float;
    begin
+      Normal := B.all.Coords - A.all.Coords;
+      AMid := A.all.GetWidth / 2.0;
+      BMid := B.all.GetWidth / 2.0;
+      xOverlap := AMid + BMid - (abs Normal.x);
+
+      if xOverlap > 0.0 then
+
+         AMid := A.all.GetHeight / 2.0;
+         BMid := B.all.GetHeight / 2.0;
+         yOverlap := AMid + BMid - (abs Normal.y);
+
+         if yOverlap > 0.0 then
+
+            if xOverlap < yOverlap then
+
+               Col.Normal :=
+                 (
+                  if Normal.x < 0.0 then Vec2D'(-1.0, 0.0) else Vec2D'(1.0, 0.0)
+                 );
+               Col.Penetration := xOverlap;
+
+            else
+
+               Col.Normal :=
+                 (
+                  if Normal.y < 0.0 then Vec2D'(0.0, -1.0) else Vec2D'(0.0, 1.0)
+                 );
+               Col.Penetration := yOverlap;
+
+            end if;
+            return True;
+
+         end if;
+
+      end if;
       return False;
+
    end RectangleOnRectangle;
 
    function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
@@ -106,7 +148,13 @@ package body Collisions is
       -- objects are moving toward each other
       if VelNormal < 0.0 then
 
+         -- resting collision correction (prevents infinite bounciness)
+   --      if Mag(RelVel) < Float'Max(Mag(dt * A.all.Gravity), Mag(dt * B.all.Gravity)) + Epsilon then
+   --         FinRestitution := 0.0;
+   --      else
          FinRestitution := Float'Min(A.Restitution, B.Restitution);
+   --      end if;
+
          ImpulseScalar := -(1.0 + FinRestitution) * VelNormal;
          ImpulseScalar := ImpulseScalar / (A.InvMass + B.InvMass);
          Impulse := ImpulseScalar * Col.Normal;
@@ -119,8 +167,8 @@ package body Collisions is
    end Resolve;
 
    procedure PosCorrection(Col : in Collision) is
-      PosPerCorrection : constant Float := 0.3;
-      Slop : constant Float := 0.05;
+      PosPerCorrection : constant Float := 0.2;
+      Slop : constant Float := 0.01;
       Correction : Vec2D;
       ScCo : Float;
       A : constant access Entity'Class := Col.A;
