@@ -1,5 +1,10 @@
 package body Vectors2D is
 
+   function "=" (Left, Right : Vec2D) return Boolean is
+   begin
+      return (Left.x = Right.x) and (Left.y = Right.y);
+   end "=";
+
    function "+" (Left, Right : Vec2D) return Vec2D is
    begin
       return Vec2D'(x => Left.x + Right.x, y => Left.y + Right.y);

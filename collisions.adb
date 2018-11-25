@@ -70,9 +70,6 @@ package body Collisions is
          Col.Normal := Vec2D'(1.0, 0.0);
       end if;
 
---      Col.A := A;
---      Col.B := B;
-
       return True;
 
    end CircleOnCircle;
@@ -126,42 +123,45 @@ package body Collisions is
    function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
                               return Boolean
    is
-      Normal, NormalSmall : Vec2D;
+      AtoB : Vec2D;
+      Normal : Vec2D;
       Closest : Vec2D;
       xExt, yExt : Float;
       Distance : Float;
       Inside : Boolean := False;
       Radius : Float;
    begin
-      Normal := B.all.Coords - A.all.GetCenter;
+      AtoB := B.all.Coords - A.all.GetCenter;
       xExt := A.all.GetWidth / 2.0;
       yExt := A.all.GetHeight / 2.0;
-      Closest.x := Clamp(Normal.x, -xExt, xExt);
-      Closest.y := Clamp(Normal.y, -yExt, yExt);
+      Closest.x := Clamp(AtoB.x, -xExt, xExt);
+      Closest.y := Clamp(AtoB.y, -yExt, yExt);
 
       -- special case of circle inside rectangle
-      if Normal = Closest then
+      if AtoB = Closest then
          Inside := True;
-         if (abs Normal.x) > (abs Normal.y) then
-            Closest.x := (if Closest.x > 0.0 then xExt else -xExt);
+         if (abs AtoB.x) < (abs AtoB.y) then
+            Closest.x := (if AtoB.x > 0.0 then xExt else -xExt);
          else
-            Closest.y := (if Closest.y > 0.0 then yExt else -yExt);
+            Closest.y := (if AtoB.y > 0.0 then yExt else -yExt);
          end if;
       end if;
 
-      NormalSmall := Normal - Closest;
-      Distance := MagSq(NormalSmall);
+      Normal := AtoB - Closest;
+      Distance := MagSq(Normal);
       Radius := B.all.Radius;
 
       -- circle not inside of the rectangle
-      if Distance > Radius * Radius and not Inside then return False; end if;
+      if Distance > Radius * Radius and not Inside then
+         return False;
+      end if;
 
-      Distance := Mag(NormalSmall);
+      Distance := Mag(Normal);
 
       if Inside then
-         Col.Normal := Normal;
+         Col.Normal := Normal / Distance;
       else
-         Col.Normal := -Normal;
+         Col.Normal := -Normal / Distance;
       end if;
       Col.Penetration := Radius - Distance;
 

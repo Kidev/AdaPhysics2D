@@ -10,6 +10,8 @@ package Vectors2D is
       y : Float;
    end record;
 
+   function "=" (Left, Right : Vec2D) return Boolean;
+
    function "+" (Left, Right : Vec2D) return Vec2D;
 
    function "-" (Left, Right : Vec2D) return Vec2D;
