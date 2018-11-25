@@ -31,5 +31,11 @@ package body Rectangles is
    begin
       return This.Dim.x;
    end GetWidth;
+   
+   function GetCenter(This : in out Rectangle) return Vec2D
+   is
+   begin
+      return This.Coords + (This.Dim / 2.0);
+   end GetCenter;
 
 end Rectangles;

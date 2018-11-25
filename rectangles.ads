@@ -13,6 +13,7 @@ package Rectangles is
    
    function GetWidth(This : in out Rectangle) return Float;
    function GetHeight(This : in out Rectangle) return Float;
+   function GetCenter(This : in out Rectangle) return Vec2D;
    
 private
 

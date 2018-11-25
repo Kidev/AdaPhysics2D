@@ -84,7 +84,7 @@ package body Collisions is
       AMid, BMid : Float;
       xOverlap, yOverlap : Float;
    begin
-      Normal := B.all.Coords - A.all.Coords;
+      Normal := B.all.GetCenter - A.all.GetCenter;
       AMid := A.all.GetWidth / 2.0;
       BMid := B.all.GetWidth / 2.0;
       xOverlap := AMid + BMid - (abs Normal.x);
@@ -167,14 +167,15 @@ package body Collisions is
    end Resolve;
 
    procedure PosCorrection(Col : in Collision) is
-      PosPerCorrection : constant Float := 0.2;
+      PosPerCorrection : constant Float := 1.0;
       Slop : constant Float := 0.01;
       Correction : Vec2D;
       ScCo : Float;
       A : constant access Entity'Class := Col.A;
       B : constant access Entity'Class := Col.B;
    begin
-      ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
+      --ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
+      ScCo := Col.Penetration / (A.InvMass + B.InvMass);
       Correction := ScCo * PosPerCorrection * Col.Normal;
 
       A.Velocity := A.Velocity - (A.InvMass * Correction);
