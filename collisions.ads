@@ -29,6 +29,8 @@ package Collisions is
 
 private
 
+   function Clamp(Value, Min, Max : Float) return Float;
+
    function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class; Col : out Collision)
                       return Boolean;
    function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision)

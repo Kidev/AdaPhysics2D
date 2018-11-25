@@ -126,8 +126,47 @@ package body Collisions is
    function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
                               return Boolean
    is
+      Normal, NormalSmall : Vec2D;
+      Closest : Vec2D;
+      xExt, yExt : Float;
+      Distance : Float;
+      Inside : Boolean := False;
+      Radius : Float;
    begin
-      return False;
+      Normal := B.all.Coords - A.all.GetCenter;
+      xExt := A.all.GetWidth / 2.0;
+      yExt := A.all.GetHeight / 2.0;
+      Closest.x := Clamp(Normal.x, -xExt, xExt);
+      Closest.y := Clamp(Normal.y, -yExt, yExt);
+
+      -- special case of circle inside rectangle
+      if Normal = Closest then
+         Inside := True;
+         if (abs Normal.x) > (abs Normal.y) then
+            Closest.x := (if Closest.x > 0.0 then xExt else -xExt);
+         else
+            Closest.y := (if Closest.y > 0.0 then yExt else -yExt);
+         end if;
+      end if;
+
+      NormalSmall := Normal - Closest;
+      Distance := MagSq(NormalSmall);
+      Radius := B.all.Radius;
+
+      -- circle not inside of the rectangle
+      if Distance > Radius * Radius and not Inside then return False; end if;
+
+      Distance := Mag(NormalSmall);
+
+      if Inside then
+         Col.Normal := Normal;
+      else
+         Col.Normal := -Normal;
+      end if;
+      Col.Penetration := Radius - Distance;
+
+      return True;
+
    end RectangleOnCircle;
 
    procedure Resolve(Col : in Collision) is
@@ -167,19 +206,29 @@ package body Collisions is
    end Resolve;
 
    procedure PosCorrection(Col : in Collision) is
-      PosPerCorrection : constant Float := 1.0;
+      PosPerCorrection : constant Float := 0.2;
       Slop : constant Float := 0.01;
       Correction : Vec2D;
       ScCo : Float;
       A : constant access Entity'Class := Col.A;
       B : constant access Entity'Class := Col.B;
    begin
-      --ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
-      ScCo := Col.Penetration / (A.InvMass + B.InvMass);
+      ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
+      --ScCo := Col.Penetration / (A.InvMass + B.InvMass);
       Correction := ScCo * PosPerCorrection * Col.Normal;
 
       A.Velocity := A.Velocity - (A.InvMass * Correction);
       B.Velocity := B.Velocity - (B.InvMass * Correction);
    end PosCorrection;
+
+   function Clamp(Value, Min, Max : Float) return Float
+   is
+   begin
+
+      if Value < Min then return Min; end if;
+      if Value > Max then return Max; end if;
+      return Value;
+
+   end Clamp;
 
 end Collisions;
