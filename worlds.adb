@@ -22,6 +22,23 @@ package body Worlds is
       end if;
    end Add;
 
+   -- Remove entity from the world
+   procedure Remove(This : in out World; Ent : not null access Entity'Class)
+   is
+      Ents : constant EArray := This.GetEntities;
+   begin
+      for I in Ents'Range loop
+         if Ents(I) = Ent then
+            This.Entities(I) := null;
+            for J in I + 1 .. Ents'Last loop
+               This.Entities(J - 1) := Ents(J);
+            end loop;
+            This.Index := This.Index - 1;
+            exit;
+         end if;
+      end loop;
+   end Remove;
+
    function GetEntities(This : in out World) return EArray
    is
       Ret : EArray (1 .. This.Index);

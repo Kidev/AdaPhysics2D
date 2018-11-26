@@ -1,4 +1,5 @@
 with Entities;
+with Materials; use Materials;
 with Vectors2D; use Vectors2D;
 
 package Rectangles is
@@ -9,7 +10,7 @@ package Rectangles is
    type RectangleAcc is access all Rectangle'Class;
 
    -- Create a new Rectangle
-   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mass, Rest : in Float) return RectangleAcc;
+   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return RectangleAcc;
    
    function GetWidth(This : in out Rectangle) return Float;
    function GetHeight(This : in out Rectangle) return Float;
@@ -19,6 +20,9 @@ private
 
    -- Initialization of a Rectangle
    procedure Initialize(This : in RectangleAcc;
-                        Pos, Vel, Grav, Dim : in Vec2D; Mass, Rest : in Float);
+                        Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material);
+   
+   overriding
+   procedure ComputeMass(This : in out Rectangle);
 
 end Rectangles;

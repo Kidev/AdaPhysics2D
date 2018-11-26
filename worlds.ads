@@ -19,6 +19,9 @@ package Worlds is
    -- Add entity to the world
    procedure Add(This : in out World; Ent : not null access Entity'Class);
 
+   -- Remove entity from the world
+   procedure Remove(This : in out World; Ent : not null access Entity'Class);
+
    -- Update the world of dt
    procedure Step(This : in out World);
 

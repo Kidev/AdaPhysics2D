@@ -1,4 +1,5 @@
 with Entities;
+with Materials; use Materials;
 with Vectors2D; use Vectors2D;
 
 package Circles is
@@ -9,12 +10,15 @@ package Circles is
    type CircleAcc is access all Circle'Class;
 
    -- Create a new Circle
-   function Create(Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float) return CircleAcc;
+   function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return CircleAcc;
 
 private
 
    -- Initialization of a Circle
    procedure Initialize(This : in CircleAcc;
-                        Pos, Vel, Grav : in Vec2D; Mass, Rest, Rad : in Float);
+                        Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material);
+
+   overriding
+   procedure ComputeMass(This : in out Circle);
 
 end Circles;

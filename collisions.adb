@@ -191,7 +191,7 @@ package body Collisions is
    --      if Mag(RelVel) < Float'Max(Mag(dt * A.all.Gravity), Mag(dt * B.all.Gravity)) + Epsilon then
    --         FinRestitution := 0.0;
    --      else
-         FinRestitution := Float'Min(A.Restitution, B.Restitution);
+         FinRestitution := Float'Min(A.Mat.Restitution, B.Mat.Restitution);
    --      end if;
 
          ImpulseScalar := -(1.0 + FinRestitution) * VelNormal;

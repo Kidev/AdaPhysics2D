@@ -1,4 +1,5 @@
 with Vectors2D; use Vectors2D;
+with Materials; use Materials;
 
 package Entities is
 
@@ -13,11 +14,15 @@ package Entities is
       Velocity : Vec2D;
       Force : Vec2D;
       InvMass : Float;
-      Restitution : Float;
+      Mat : Material;
       Gravity : Vec2D;
    end record;
 
    procedure Initialize(This : out Entity; EntType : in EntityTypes;
-                        Pos, Vel, Grav : in Vec2D; Mass, Rest : in Float);
+                        Pos, Vel, Grav : in Vec2D; Mat : in Material);
+
+   -- This must be implemented in each new entity class
+   -- It converts the Material data into an inverse mass float
+   procedure ComputeMass(This : in out Entity) is abstract;
 
 end Entities;
