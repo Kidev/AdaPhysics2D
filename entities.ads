@@ -25,4 +25,7 @@ package Entities is
    -- It converts the Material data into an inverse mass float
    procedure ComputeMass(This : in out Entity) is abstract;
 
+   -- Apply a force to the entity
+   procedure ApplyForce(This : in out Entity; Force : Vec2D);
+
 end Entities;

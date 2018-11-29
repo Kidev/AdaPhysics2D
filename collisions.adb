@@ -178,6 +178,14 @@ package body Collisions is
       A : constant access Entity'Class := Col.A;
       B : constant access Entity'Class := Col.B;
    begin
+
+      -- Ignore collision between static objects
+      if A.InvMass + B.InvMass = 0.0 then
+         A.Velocity := Vec2D'(0.0, 0.0);
+         B.Velocity := Vec2D'(0.0, 0.0);
+         return;
+      end if;
+
       -- /!\ If objects are immobile relative to each other
       -- /!\ This may cause problems in 0g
       -- /!\ A fix might be to add 0.01 in this case
@@ -187,12 +195,7 @@ package body Collisions is
       -- objects are moving toward each other
       if VelNormal < 0.0 then
 
-         -- resting collision correction (prevents infinite bounciness)
-   --      if Mag(RelVel) < Float'Max(Mag(dt * A.all.Gravity), Mag(dt * B.all.Gravity)) + Epsilon then
-   --         FinRestitution := 0.0;
-   --      else
          FinRestitution := Float'Min(A.Mat.Restitution, B.Mat.Restitution);
-   --      end if;
 
          ImpulseScalar := -(1.0 + FinRestitution) * VelNormal;
          ImpulseScalar := ImpulseScalar / (A.InvMass + B.InvMass);
@@ -201,12 +204,43 @@ package body Collisions is
          A.Velocity := A.Velocity - (A.InvMass * Impulse);
          B.Velocity := B.Velocity + (B.InvMass * Impulse);
 
+         -- Compute friction
+         declare
+            Tangent : Vec2D;
+            FrictionImpulse : Vec2D;
+            ImpulseScalarTan : Float;
+            MuS, MuC : Float;
+         begin
+            RelVel := B.Velocity - A.Velocity;
+            Tangent := RelVel - (RelVel * Col.Normal) * Col.Normal;
+            Tangent := Normalize(Tangent);
+
+            ImpulseScalarTan := -(RelVel * Tangent);
+            ImpulseScalarTan := ImpulseScalarTan / (A.InvMass + B.InvMass);
+
+            MuS := Friction(A.Mat.StaticFriction, B.Mat.StaticFriction);
+
+            if (abs ImpulseScalarTan) < (MuS * ImpulseScalar) then
+               FrictionImpulse := ImpulseScalarTan * Tangent;
+            else
+               MuC := Friction(A.Mat.DynamicFriction, B.Mat.DynamicFriction);
+               FrictionImpulse := -ImpulseScalar * Tangent * MuC;
+            end if;
+
+            A.Velocity := A.Velocity - (A.InvMass * FrictionImpulse);
+            B.Velocity := B.Velocity + (B.InvMass * FrictionImpulse);
+         end;
       end if;
 
    end Resolve;
 
+   function Friction(A, B : Float) return Float is
+   begin
+      return Float'Min(A, B);
+   end;
+
    procedure PosCorrection(Col : in Collision) is
-      PosPerCorrection : constant Float := 0.2;
+      PosPerCorrection : constant Float := 1.0;
       Slop : constant Float := 0.01;
       Correction : Vec2D;
       ScCo : Float;
@@ -214,11 +248,10 @@ package body Collisions is
       B : constant access Entity'Class := Col.B;
    begin
       ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
-      --ScCo := Col.Penetration / (A.InvMass + B.InvMass);
       Correction := ScCo * PosPerCorrection * Col.Normal;
 
       A.Velocity := A.Velocity - (A.InvMass * Correction);
-      B.Velocity := B.Velocity - (B.InvMass * Correction);
+      B.Velocity := B.Velocity + (B.InvMass * Correction);
    end PosCorrection;
 
    function Clamp(Value, Min, Max : Float) return Float

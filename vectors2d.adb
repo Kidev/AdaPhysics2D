@@ -58,4 +58,11 @@ package body Vectors2D is
       return Sqrt(MagSq(This));
    end Mag;
 
+   function Normalize(This : Vec2D) return Vec2D is
+      Norm : constant Float := Mag(This);
+   begin
+      if Norm = 0.0 then return This; end if;
+      return This / Norm;
+   end Normalize;
+
 end Vectors2D;

@@ -35,4 +35,6 @@ package Vectors2D is
 
    function Mag(This : Vec2D) return Float;
 
+   function Normalize(This : Vec2D) return Vec2D;
+
 end Vectors2D;

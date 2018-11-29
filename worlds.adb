@@ -62,6 +62,7 @@ package body Worlds is
          A := This.Entities(I);
          for J in I .. This.Index loop
             B := This.Entities(J);
+            -- Narrow phase
             if A /= B and then Collide(A, B, Cols(Count)) then
                Count := Count + 1;
             end if;

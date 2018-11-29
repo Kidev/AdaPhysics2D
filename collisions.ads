@@ -21,6 +21,7 @@ package Collisions is
 
    -- This procedure is called when there is a collision
    -- It impulses on A and B so that they no longer collide
+   -- Solves for friction too
    procedure Resolve(Col : in Collision);
 
    -- This procedure, called after the collision resolution
@@ -28,6 +29,8 @@ package Collisions is
    procedure PosCorrection(Col : in Collision);
 
 private
+
+   function Friction(A, B : Float) return Float;
 
    function Clamp(Value, Min, Max : Float) return Float;
 
