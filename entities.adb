@@ -19,4 +19,10 @@ package body Entities is
       This.Force := This.Force + Force;
    end ApplyForce;
 
+   procedure SetGrav(This : in out Entity; Grav : Vec2D)
+   is
+   begin
+      This.Gravity := Grav;
+   end SetGrav;
+
 end Entities;

@@ -16,5 +16,8 @@ package Materials is
    RUBBER : Material := (MTRubber, 0.3, 0.8, 0.1, 0.05);
    ICE : Material := (MTIce, 0.93, 0.3, 0.01, 0.001);
    STATIC : Material := (MTStatic, 0.0, 1.0, 1.0, 1.0);
+   
+   -- allows you to transform any material into a static one
+   function SetStatic(This : Material) return Material;
 
 end Materials;

@@ -28,4 +28,6 @@ package Entities is
    -- Apply a force to the entity
    procedure ApplyForce(This : in out Entity; Force : Vec2D);
 
+   procedure SetGrav(This : in out Entity; Grav : Vec2D);
+
 end Entities;
