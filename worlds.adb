@@ -1,5 +1,6 @@
 with Collisions; use Collisions;
 with Vectors2D; use Vectors2D;
+with Interfaces; use Interfaces;
 
 package body Worlds is
 
@@ -66,7 +67,8 @@ package body Worlds is
          for J in I .. This.Index loop
             B := This.Entities(J);
             -- Narrow phase
-            if A /= B and then Collide(A, B, Cols(Count)) then
+            if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
+              and then Collide(A, B, Cols(Count)) then
                Count := Count + 1;
             end if;
          end loop;

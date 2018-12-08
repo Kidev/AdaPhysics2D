@@ -1,15 +1,9 @@
-with Interfaces; use Interfaces;
-
 package body Collisions is
 
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
    return Boolean
    is
    begin
-
-      if (A.all.Layer and B.all.Layer) = 2#00000000# then
-         return False;
-      end if;
 
       Col.A := A;
       Col.B := B;

@@ -4,7 +4,7 @@ This is a simple 2D physics engine for Ada. Check the wiki page to see how to us
 
 # Features
 
-* Multiple 2D worlds
+* Multiple 2D worlds, with layering
 * Real time collision detection and impulse resolution
 * Circles, Rectangles with custom:
 	- initial position and speed
