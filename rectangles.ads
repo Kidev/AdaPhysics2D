@@ -7,7 +7,7 @@ package Rectangles is
    type Rectangle is new Entities.Entity with record
       Dim : Vec2D; -- (x => width, y => height)
    end record;
-   type RectangleAcc is access all Rectangle'Class;
+   type RectangleAcc is access all Rectangle;
 
    -- Create a new Rectangle
    function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return RectangleAcc;
@@ -24,5 +24,8 @@ private
    
    overriding
    procedure ComputeMass(This : in out Rectangle);
+   
+   overriding
+   procedure FreeEnt(This : access Rectangle);
 
 end Rectangles;

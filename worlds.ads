@@ -20,7 +20,8 @@ package Worlds is
    procedure Add(This : in out World; Ent : not null access Entity'Class);
 
    -- Remove entity from the world
-   procedure Remove(This : in out World; Ent : not null access Entity'Class);
+   -- Entity is detroyed if Destroy is true
+   procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
 
    -- Update the world of dt
    procedure Step(This : in out World);

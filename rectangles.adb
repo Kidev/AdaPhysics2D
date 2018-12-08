@@ -1,3 +1,5 @@
+with Ada.Unchecked_Deallocation;
+
 package body Rectangles is
 
    -- Initialization of a Rectangle
@@ -46,5 +48,13 @@ package body Rectangles is
       Mass := This.Dim.x * This.Dim.y * This.Mat.Density;
       This.InvMass := (if Mass = 0.0 then 0.0 else 1.0 / Mass);
    end ComputeMass;
+   
+   procedure FreeEnt(This : access Rectangle)
+   is
+      procedure FreeRectangle is new Ada.Unchecked_Deallocation(Rectangle, RectangleAcc);
+      P : RectangleAcc := RectangleAcc(This);
+   begin
+      FreeRectangle(P);
+   end FreeEnt;
 
 end Rectangles;

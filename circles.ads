@@ -7,7 +7,7 @@ package Circles is
    type Circle is new Entities.Entity with record
       Radius : Float;
    end record;
-   type CircleAcc is access all Circle'Class;
+   type CircleAcc is access all Circle;
 
    -- Create a new Circle
    function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return CircleAcc;
@@ -20,5 +20,8 @@ private
 
    overriding
    procedure ComputeMass(This : in out Circle);
+
+   overriding
+   procedure FreeEnt(This : access Circle);
 
 end Circles;

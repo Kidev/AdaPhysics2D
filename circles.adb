@@ -1,4 +1,5 @@
 with Ada.Numerics;
+with Ada.Unchecked_Deallocation;
 
 package body Circles is
 
@@ -30,5 +31,13 @@ package body Circles is
       Mass := Ada.Numerics.Pi * This.Radius * This.Radius * This.Mat.Density;
       This.InvMass := (if Mass = 0.0 then 0.0 else 1.0 / Mass);
    end ComputeMass;
+
+   procedure FreeEnt(This : access Circle)
+   is
+      procedure FreeCircle is new Ada.Unchecked_Deallocation(Circle, CircleAcc);
+      P : CircleAcc := CircleAcc(This);
+   begin
+      FreeCircle(P);
+   end FreeEnt;
 
 end Circles;

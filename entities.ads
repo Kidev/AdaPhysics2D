@@ -1,10 +1,14 @@
 with Vectors2D; use Vectors2D;
 with Materials; use Materials;
+with Interfaces; use Interfaces;
 
 package Entities is
 
    -- List all the entity types
    type EntityTypes is (EntCircle, EntRectangle);
+
+   -- Required for layering
+   subtype Byte is Unsigned_8;
 
    -- Abstract superclass of all entities
    -- Lists the minimum fields for an entity to exist
@@ -16,7 +20,11 @@ package Entities is
       InvMass : Float;
       Mat : Material;
       Gravity : Vec2D;
+      Layer : Byte := 2#10000000#;
    end record;
+
+   -- Frees the entity
+   procedure FreeEnt(This : access Entity) is abstract;
 
    procedure Initialize(This : out Entity; EntType : in EntityTypes;
                         Pos, Vel, Grav : in Vec2D; Mat : in Material);

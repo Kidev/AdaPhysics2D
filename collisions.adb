@@ -1,3 +1,5 @@
+with Interfaces; use Interfaces;
+
 package body Collisions is
 
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
@@ -5,46 +7,29 @@ package body Collisions is
    is
    begin
 
+      if (A.all.Layer and B.all.Layer) = 2#00000000# then
+         return False;
+      end if;
+
       Col.A := A;
       Col.B := B;
 
-      -- /!\ Strange warnings here and on the elsif (lines 10 & 12) ?
-      -- /!\ warning: condition can only be False if invalid values present
-      if A.all.EntityType = EntCircle then
-         return CircleOnX(Circles.CircleAcc(A), B, Col);
-      elsif B.all.EntityType = EntCircle then
-         return CircleOnX(Circles.CircleAcc(B), A, Col);
+      if A.all.EntityType = EntCircle and B.all.EntityType = EntCircle then
+         return CircleOnCircle(Circles.CircleAcc(A), Circles.CircleAcc(B), Col);
       end if;
-
-      if A.all.EntityType = EntRectangle then
-         return RectangleOnX(Rectangles.RectangleAcc(A), B, Col);
-      elsif B.all.EntityType = EntRectangle then
-         return RectangleOnX(Rectangles.RectangleAcc(B), A, Col);
+      if A.all.EntityType = EntCircle and B.all.EntityType = EntRectangle then
+         return CircleOnRectangle(Circles.CircleAcc(A), Rectangles.RectangleAcc(B), Col);
+      end if;
+      if A.all.EntityType = EntRectangle and B.all.EntityType = EntCircle then
+         return RectangleOnCircle(Rectangles.RectangleAcc(A), Circles.CircleAcc(B), Col);
+      end if;
+      if A.all.EntityType = EntRectangle and B.all.EntityType = EntRectangle then
+         return RectangleOnRectangle(Rectangles.RectangleAcc(A), Rectangles.RectangleAcc(B), Col);
       end if;
 
       return False;
 
    end Collide;
-
-   function CircleOnX(A : in Circles.CircleAcc; B : access Entity'Class;
-                      Col : out Collision) return Boolean
-   is
-   begin
-      case B.all.EntityType is
-         when EntCircle => return CircleOnCircle(A, Circles.CircleAcc(B), Col);
-         when EntRectangle => return RectangleOnCircle(Rectangles.RectangleAcc(B), A, Col);
-      end case;
-   end CircleOnX;
-
-   function RectangleOnX(A : in Rectangles.RectangleAcc; B : access Entity'Class; Col : out Collision)
-                         return Boolean
-   is
-   begin
-      case B.all.EntityType is
-         when EntCircle => return RectangleOnCircle(A, Circles.CircleAcc(B), Col);
-         when EntRectangle => return RectangleOnRectangle(A, Rectangles.RectangleAcc(B), Col);
-      end case;
-   end RectangleOnX;
 
    function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean
    is
@@ -120,6 +105,16 @@ package body Collisions is
 
    end RectangleOnRectangle;
 
+   function CircleOnRectangle(A : in Circles.CircleAcc; B : Rectangles.RectangleAcc; Col : out Collision)
+                              return Boolean
+   is
+      Result : Boolean;
+   begin
+      Result := RectangleOnCircle(B, A, Col);
+      Col.Normal := -Col.Normal;
+      return Result;
+   end CircleOnRectangle;
+
    function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
                               return Boolean
    is
@@ -158,12 +153,12 @@ package body Collisions is
 
       Distance := Mag(Normal);
 
-      if Inside then
-         Col.Normal := Normal / Distance;
-      else
-         Col.Normal := -Normal / Distance;
-      end if;
       Col.Penetration := Radius - Distance;
+      if Inside then
+         Col.Normal := -Normal / Distance;
+      else
+         Col.Normal := Normal / Distance;
+      end if;
 
       return True;
 

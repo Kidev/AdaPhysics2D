@@ -23,12 +23,15 @@ package body Worlds is
    end Add;
 
    -- Remove entity from the world
-   procedure Remove(This : in out World; Ent : not null access Entity'Class)
+   procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
       Ents : constant EArray := This.GetEntities;
    begin
       for I in Ents'Range loop
          if Ents(I) = Ent then
+            if Destroy then
+               FreeEnt(Ent);
+            end if;
             This.Entities(I) := null;
             for J in I + 1 .. Ents'Last loop
                This.Entities(J - 1) := Ents(J);
@@ -102,6 +105,8 @@ package body Worlds is
    begin
       if Ent.all.InvMass /= 0.0 then
          Ent.all.Velocity := Ent.all.Velocity + ((Ent.InvMass * Ent.Force) + Ent.Gravity) * dt;
+      else
+         Ent.all.Velocity := (0.0, 0.0);
       end if;
    end IntForce;
 

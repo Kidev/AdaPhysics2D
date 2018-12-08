@@ -25,4 +25,16 @@ package body Entities is
       This.Gravity := Grav;
    end SetGrav;
 
+   procedure SetLayer(This : in out Entity; Lay : Byte)
+   is
+   begin
+      This.Layer := Lay;
+   end SetLayer;
+
+   procedure AddLayer(This : in out Entity; Lay : Byte)
+   is
+   begin
+      This.Layer := This.Layer and Lay;
+   end AddLayer;
+
 end Entities;
