@@ -2,8 +2,8 @@ with Entities; use Entities;
 
 package Worlds is
 
-   -- fixed number of entities: 32
-   subtype EntArrIndex is Integer range 0 .. 32;
+   -- fixed number of entities
+   subtype EntArrIndex is Integer range 0 .. 64;
    type EntArray is array (EntArrIndex) of access Entity'Class;
    type EArray is array (EntArrIndex range <>) of access Entity'Class;
 
@@ -25,6 +25,10 @@ package Worlds is
 
    -- Update the world of dt
    procedure Step(This : in out World);
+
+   -- Update the world of dt with low ram usage
+   procedure StepLowRAM(This : in out World;
+                         Invalid : access function(E : access Entity'Class) return Boolean := null);
 
    -- Get an array of entities
    function GetEntities(This : in out World) return EArray;

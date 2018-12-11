@@ -13,6 +13,7 @@ package Collisions is
       Normal : Vec2D;
       Penetration : Float;
    end record;
+   pragma Pack (Collision);
 
    -- Return True if A collides with B; else false
    -- Fills Col with data about the collision

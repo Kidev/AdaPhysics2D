@@ -53,6 +53,66 @@ package body Worlds is
       return Ret;
    end;
 
+   -- This procedure will perform Collision resolution
+   -- in a way that doesnt require as much RAM as the Step
+   -- one: it will not store all collisions and then resolve
+   -- them. Instead, it will resolve them one at a time
+   -- The result might be less realistic, but more efficient
+   procedure StepLowRAM(This : in out World;
+                         Invalid : access function(E : access Entity'Class) return Boolean := null)
+   is
+      A, B : access Entity'Class;
+      Col : Collision;
+   begin
+
+      for I in 1 .. This.Index loop
+         IntForce(This.Entities(I), This.dt);
+      end loop;
+
+      -- Broad phase
+      for I in 1 .. This.Index loop
+         A := This.Entities(I);
+         for J in I .. This.Index loop
+            B := This.Entities(J);
+            -- Narrow phase
+            if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
+              and then Collide(A, B, Col) then
+               Resolve(Col);
+               PosCorrection(Col);
+            end if;
+         end loop;
+      end loop;
+
+      for I in 1 .. This.Index loop
+         IntVelocity(This.Entities(I), This.dt);
+      end loop;
+
+      for I in 1 .. This.Index loop
+         ResetForces(This.Entities(I));
+      end loop;
+
+      if Invalid /= null then
+         declare
+            Edited : Boolean := False;
+            LastI : EntArrIndex := 1;
+         begin
+            loop
+               Edited := False;
+               for I in LastI .. This.Index loop
+                  if Invalid(This.Entities(I)) then
+                     This.Remove(This.Entities(I), True);
+                     Edited := True;
+                     LastI := I;
+                     exit;
+                  end if;
+               end loop;
+               exit when Edited = False;
+            end loop;
+         end;
+      end if;
+
+   end StepLowRAM;
+
    -- Update the world of dt
    procedure Step(This : in out World)
    is
