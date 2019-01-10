@@ -20,7 +20,7 @@ package Entities is
       InvMass : Float;
       Mat : Material;
       Gravity : Vec2D;
-      Layer : Byte := 2#10000000#;
+      Layer : Byte := 2#00000001#;
    end record;
 
    -- Frees the entity
@@ -37,5 +37,9 @@ package Entities is
    procedure ApplyForce(This : in out Entity; Force : Vec2D);
 
    procedure SetGrav(This : in out Entity; Grav : Vec2D);
+
+   procedure SetLayer(This : in out Entity; Lay : Byte);
+
+   procedure AddLayer(This : in out Entity; Lay : Byte);
 
 end Entities;

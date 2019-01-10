@@ -1,36 +1,35 @@
+with Circles;
+with Rectangles;
+
 package body Collisions is
 
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
    return Boolean
    is
+      type CollideFunc is access function (Col : in out Collision) return Boolean;
+      type DispatcherArr is array (EntityTypes, EntityTypes) of CollideFunc;
+      Dispatcher : constant DispatcherArr :=
+        (EntCircle => (EntCircle => CircleOnCircle'Access,
+                       EntRectangle => CircleOnRectangle'Access),
+         EntRectangle => (EntCircle => RectangleOnCircle'Access,
+                          EntRectangle => RectangleOnRectangle'Access));
    begin
 
-      Col.A := A;
-      Col.B := B;
-
-      if A.all.EntityType = EntCircle and B.all.EntityType = EntCircle then
-         return CircleOnCircle(Circles.CircleAcc(A), Circles.CircleAcc(B), Col);
-      end if;
-      if A.all.EntityType = EntCircle and B.all.EntityType = EntRectangle then
-         return CircleOnRectangle(Circles.CircleAcc(A), Rectangles.RectangleAcc(B), Col);
-      end if;
-      if A.all.EntityType = EntRectangle and B.all.EntityType = EntCircle then
-         return RectangleOnCircle(Rectangles.RectangleAcc(A), Circles.CircleAcc(B), Col);
-      end if;
-      if A.all.EntityType = EntRectangle and B.all.EntityType = EntRectangle then
-         return RectangleOnRectangle(Rectangles.RectangleAcc(A), Rectangles.RectangleAcc(B), Col);
-      end if;
-
-      return False;
+      Col.A := A; Col.B := B;
+      return Dispatcher(A.all.EntityType, B.all.EntityType).all(Col);
 
    end Collide;
 
-   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision) return Boolean
+   function CircleOnCircle(Col : in out Collision) return Boolean
    is
       NormalVec : Vec2D;
       TotRadius : Float;
       Distance : Float;
+      A, B : Circles.CircleAcc;
    begin
+
+      A := Circles.CircleAcc(Col.A);
+      B := Circles.CircleAcc(Col.B);
 
       NormalVec := B.all.Coords - A.all.Coords;
       TotRadius := A.all.Radius + B.all.Radius;
@@ -53,13 +52,16 @@ package body Collisions is
 
    end CircleOnCircle;
 
-   function RectangleOnRectangle(A, B : in Rectangles.RectangleAcc; Col : out Collision)
-                                 return Boolean
+   function RectangleOnRectangle(Col : in out Collision) return Boolean
    is
       Normal : Vec2D;
       AMid, BMid : Float;
       xOverlap, yOverlap : Float;
+      A, B : Rectangles.RectangleAcc;
    begin
+      A := Rectangles.RectangleAcc(Col.A);
+      B := Rectangles.RectangleAcc(Col.B);
+
       Normal := B.all.GetCenter - A.all.GetCenter;
       AMid := A.all.GetWidth / 2.0;
       BMid := B.all.GetWidth / 2.0;
@@ -99,18 +101,20 @@ package body Collisions is
 
    end RectangleOnRectangle;
 
-   function CircleOnRectangle(A : in Circles.CircleAcc; B : Rectangles.RectangleAcc; Col : out Collision)
-                              return Boolean
+   function CircleOnRectangle(Col : in out Collision) return Boolean
    is
       Result : Boolean;
+      Temp : access Entity'Class;
    begin
-      Result := RectangleOnCircle(B, A, Col);
-      Col.Normal := -Col.Normal;
+      Temp := Col.A;
+      Col.A := Col.B;
+      Col.B := Temp;
+
+      Result := RectangleOnCircle(Col);
       return Result;
    end CircleOnRectangle;
 
-   function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
-                              return Boolean
+   function RectangleOnCircle(Col : in out Collision) return Boolean
    is
       AtoB : Vec2D;
       Normal : Vec2D;
@@ -119,7 +123,12 @@ package body Collisions is
       Distance : Float;
       Inside : Boolean := False;
       Radius : Float;
+      A : Rectangles.RectangleAcc;
+      B : Circles.CircleAcc;
    begin
+      A := Rectangles.RectangleAcc(Col.A);
+      B := Circles.CircleAcc(Col.B);
+
       AtoB := B.all.Coords - A.all.GetCenter;
       xExt := A.all.GetWidth / 2.0;
       yExt := A.all.GetHeight / 2.0;

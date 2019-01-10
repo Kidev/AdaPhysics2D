@@ -1,6 +1,4 @@
 with Entities; use Entities;
-with Circles;
-with Rectangles;
 with Vectors2D; use Vectors2D;
 
 package Collisions is
@@ -35,16 +33,12 @@ private
 
    function Clamp(Value, Min, Max : Float) return Float;
 
-   function CircleOnCircle(A, B : in Circles.CircleAcc; Col : out Collision)
-                           return Boolean;
+   function CircleOnCircle(Col : in out Collision) return Boolean;
 
-   function RectangleOnRectangle(A, B : in Rectangles.RectangleAcc; Col : out Collision)
-                                 return Boolean;
+   function RectangleOnRectangle(Col : in out Collision) return Boolean;
 
-   function RectangleOnCircle(A : in Rectangles.RectangleAcc; B : in Circles.CircleAcc; Col : out Collision)
-                              return Boolean;
+   function RectangleOnCircle(Col : in out Collision) return Boolean;
 
-   function CircleOnRectangle(A : in Circles.CircleAcc; B : Rectangles.RectangleAcc; Col : out Collision)
-                              return Boolean;
+   function CircleOnRectangle(Col : in out Collision) return Boolean;
 
 end Collisions;
