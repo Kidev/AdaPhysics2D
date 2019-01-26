@@ -6,11 +6,13 @@ package Worlds is
    subtype EntArrIndex is Integer range 0 .. 64;
    type EntArray is array (EntArrIndex) of access Entity'Class;
    type EArray is array (EntArrIndex range <>) of access Entity'Class;
+   type EChecker is access function(E : access Entity'Class) return Boolean;
 
    type World is tagged record
       Entities : EntArray;
       Index : EntArrIndex;
       dt : Float;
+      InvalidChecker : EChecker := null;
    end record;
 
    -- init world
@@ -18,6 +20,9 @@ package Worlds is
 
    -- Add entity to the world
    procedure Add(This : in out World; Ent : not null access Entity'Class);
+
+   -- Gives the world a function to check if entities are valid or not
+   procedure SetInvalidChecker(This : in out World; Invalider : EChecker);
 
    -- Remove entity from the world
    -- Entity is detroyed if Destroy is true
@@ -27,11 +32,13 @@ package Worlds is
    procedure Step(This : in out World);
 
    -- Update the world of dt with low ram usage
-   procedure StepLowRAM(This : in out World;
-                         Invalid : access function(E : access Entity'Class) return Boolean := null);
+   procedure StepLowRAM(This : in out World);
 
    -- Get an array of entities
    function GetEntities(This : in out World) return EArray;
+
+   -- Remove invalid entities according to InvalidChecker, if not null
+   procedure CheckEntities(This : in out World);
 
 private
 

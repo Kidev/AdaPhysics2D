@@ -11,6 +11,7 @@ package body Worlds is
       This.Index := 0;
       This.dt := dt;
       This.Entities := (others => null);
+      This.InvalidChecker := null;
    end Init;
 
    -- Add entity to the world
@@ -22,6 +23,15 @@ package body Worlds is
          This.Entities(This.Index) := Ent;
       end if;
    end Add;
+
+   -- Gives the world a function to check if entities are valid or not
+   procedure SetInvalidChecker(This : in out World; Invalider : EChecker)
+   is
+   begin
+      if Invalider /= null then
+         This.InvalidChecker := Invalider;
+      end if;
+   end SetInvalidChecker;
 
    -- Remove entity from the world
    procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
@@ -58,8 +68,7 @@ package body Worlds is
    -- one: it will not store all collisions and then resolve
    -- them. Instead, it will resolve them one at a time
    -- The result might be less realistic, but more efficient
-   procedure StepLowRAM(This : in out World;
-                         Invalid : access function(E : access Entity'Class) return Boolean := null)
+   procedure StepLowRAM(This : in out World)
    is
       A, B : access Entity'Class;
       Col : Collision;
@@ -91,25 +100,7 @@ package body Worlds is
          ResetForces(This.Entities(I));
       end loop;
 
-      if Invalid /= null then
-         declare
-            Edited : Boolean := False;
-            LastI : EntArrIndex := 1;
-         begin
-            loop
-               Edited := False;
-               for I in LastI .. This.Index loop
-                  if Invalid(This.Entities(I)) then
-                     This.Remove(This.Entities(I), True);
-                     Edited := True;
-                     LastI := I;
-                     exit;
-                  end if;
-               end loop;
-               exit when Edited = False;
-            end loop;
-         end;
-      end if;
+      This.CheckEntities;
 
    end StepLowRAM;
 
@@ -154,7 +145,33 @@ package body Worlds is
          ResetForces(This.Entities(I));
       end loop;
 
+      This.CheckEntities;
+
    end Step;
+
+   procedure CheckEntities(This : in out World)
+   is
+   begin
+      if This.InvalidChecker /= null then
+         declare
+            Edited : Boolean := False;
+            LastI : EntArrIndex := 1;
+         begin
+            loop
+               Edited := False;
+               for I in LastI .. This.Index loop
+                  if This.InvalidChecker.all(This.Entities(I)) then
+                     This.Remove(This.Entities(I), True);
+                     Edited := True;
+                     LastI := I;
+                     exit;
+                  end if;
+               end loop;
+               exit when Edited = False;
+            end loop;
+         end;
+      end if;
+   end CheckEntities;
 
    procedure ResetForces(Ent : not null access Entity'Class)
    is
