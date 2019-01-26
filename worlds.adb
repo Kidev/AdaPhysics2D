@@ -107,10 +107,13 @@ package body Worlds is
    -- Update the world of dt
    procedure Step(This : in out World)
    is
-      type ColArray is array (EntArrIndex) of Collision;
+      -- TODO the 2 lines below crashes the RAM on STM32 when This.Index >= 13
+      -- The number of max collisions would be 78, and its too much for the RAM
+      subtype ColIndex is Natural range 0 .. ((This.Index * (This.Index - 1)) / 2);
+      type ColArray is array (ColIndex) of Collision;
       Cols : ColArray;
       A, B : access Entity'Class;
-      Count : EntArrIndex := 0;
+      Count : ColIndex := 0;
    begin
       -- Broad phase
       for I in 1 .. This.Index loop
