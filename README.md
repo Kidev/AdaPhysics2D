@@ -11,4 +11,4 @@ This is a simple 2D physics engine for Ada. Check the wiki page to see how to us
 	- gravity
 	- material
 * Custom forces impulsions
-* Solid friction
+* Solid and fluid friction
