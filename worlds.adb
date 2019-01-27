@@ -1,6 +1,7 @@
 with Collisions; use Collisions;
-with Vectors2D; use Vectors2D;
 with Interfaces; use Interfaces;
+with Circles; use Circles;
+with Rectangles; use Rectangles;
 
 package body Worlds is
 
@@ -12,6 +13,7 @@ package body Worlds is
       This.dt := dt;
       This.Entities := (others => null);
       This.InvalidChecker := null;
+      This.Env := VACUUM;
    end Init;
 
    -- Add entity to the world
@@ -75,7 +77,7 @@ package body Worlds is
    begin
 
       for I in 1 .. This.Index loop
-         IntForce(This.Entities(I), This.dt);
+         This.IntForce(This.Entities(I));
       end loop;
 
       -- Broad phase
@@ -93,7 +95,7 @@ package body Worlds is
       end loop;
 
       for I in 1 .. This.Index loop
-         IntVelocity(This.Entities(I), This.dt);
+         This.IntVelocity(This.Entities(I));
       end loop;
 
       for I in 1 .. This.Index loop
@@ -129,7 +131,7 @@ package body Worlds is
       end loop;
 
       for I in 1 .. This.Index loop
-         IntForce(This.Entities(I), This.dt);
+         This.IntForce(This.Entities(I));
       end loop;
 
       for I in 0 .. Count - 1 loop
@@ -137,7 +139,7 @@ package body Worlds is
       end loop;
 
       for I in 1 .. This.Index loop
-         IntVelocity(This.Entities(I), This.dt);
+         This.IntVelocity(This.Entities(I));
       end loop;
 
       for I in 0 .. Count - 1 loop
@@ -182,22 +184,101 @@ package body Worlds is
       Ent.Force := Vec2D'(x => 0.0, y => 0.0);
    end ResetForces;
 
-   procedure IntForce(Ent : not null access Entity'Class; dt : Float)
+   -- Sets the env density. 0.0 disables fluid friction
+   procedure SetEnvironment(This : in out World; Env : Environment)
+   is
+   begin
+      This.Env := Env;
+   end SetEnvironment;
+
+   -- This compute the fluid friction between That and the ambiant air in This
+   -- It should depend of the shape and speed of That
+   -- It returns a positive force that will oppose the movement in the end
+   -- Cx_circle : 0.47 | Cx_rect : 1.05
+   -- S_circle : 3.14 * This.Radius | S_rect : (That.Dim.x + That.Dim.y) / 2.0;
+   -- k_circle : 6.0 * 3.14 * This.Radius | k_rect : 6.0 * 3.14 * (That.Dim.x + That.Dim.y) / 2.0
+   function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D
+   is
+      QuadraticLimit : constant Float := 5.0;
+   begin
+      if This.Env.Density = 0.0 or else This.Env.Viscosity = 0.0 then
+         return (0.0, 0.0);
+      end if;
+      if MagSq(That.Velocity) >= QuadraticLimit * QuadraticLimit then
+         declare
+
+            function GetCx(Ent : access Entity'Class) return Float is
+            begin
+               case Ent.EntityType is
+                  when EntCircle => return 0.47;
+                  when EntRectangle => return 1.05;
+               end case;
+            end GetCx;
+
+            function GetS(Ent : access Entity'Class) return Float is
+            begin
+               case Ent.EntityType is
+                  when EntCircle =>
+                     return 3.14 * CircleAcc(Ent).Radius;
+                  when EntRectangle =>
+                     return (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
+               end case;
+            end GetS;
+
+            Rho : constant Float := This.Env.Density; -- Density for the env
+            S : constant Float := GetS(That); -- "Area" normal to speed
+            Cx : constant Float := GetCx(That); -- Drag coeff
+         begin
+            return 0.5 * Rho * S * Cx * Sq(That.Velocity);
+         end;
+      end if;
+      declare
+
+         function GetK(Ent : access Entity'Class) return Float is
+         begin
+            case Ent.EntityType is
+               when EntCircle =>
+                  return 6.0 * 3.14 * CircleAcc(Ent).Radius;
+               when EntRectangle =>
+                  return 6.0 * 3.14 * (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
+            end case;
+         end GetK;
+
+         Nu : constant Float := This.Env.Viscosity * This.Env.Density; -- viscosity coeff for env
+         k : constant Float := GetK(That); -- shape coeff for That
+      begin
+         return Nu * k * That.Velocity;
+      end;
+   end FluidFriction;
+
+   -- F: custom force | m: mass | g: grav acc | f(v) >= 0: dynamic friction, function of speed
+   -- F = f(v) - mg [Newton's 2nd Law]
+   -- F + mg - f(v) = 0
+   -- F/m + g - f(v)/m = 0
+   -- (F-f(v))/m + g = 0
+   -- Let A = ((F-f(v))/m + g), so A = 0
+   -- A + v/dt = v/dt [Euler's integration method]
+   -- v = v + A*dt
+   procedure IntForce(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
-         Ent.all.Velocity := Ent.all.Velocity + ((Ent.InvMass * Ent.Force) + Ent.Gravity) * dt;
+         declare
+            A : constant Vec2D := (((Ent.Force - This.FluidFriction(Ent)) * Ent.InvMass) + Ent.Gravity);
+         begin
+            Ent.all.Velocity := Ent.all.Velocity + (A * This.dt);
+         end;
       else
          Ent.all.Velocity := (0.0, 0.0);
       end if;
    end IntForce;
 
-   procedure IntVelocity(Ent : not null access Entity'Class; dt : Float)
+   procedure IntVelocity(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
-         Ent.all.Coords := Ent.all.Coords + (Ent.all.Velocity * dt);
-         IntForce(Ent, dt);
+         Ent.all.Coords := Ent.all.Coords + (Ent.all.Velocity * This.dt);
+         This.IntForce(Ent);
       end if;
    end IntVelocity;
 

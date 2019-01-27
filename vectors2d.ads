@@ -37,4 +37,6 @@ package Vectors2D is
 
    function Normalize(This : Vec2D) return Vec2D;
 
+   function Sq(This : Vec2D) return Vec2D;
+
 end Vectors2D;

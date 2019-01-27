@@ -1,4 +1,6 @@
 with Entities; use Entities;
+with Materials; use Materials;
+with Vectors2D; use Vectors2D;
 
 package Worlds is
 
@@ -12,7 +14,8 @@ package Worlds is
       Entities : EntArray;
       Index : EntArrIndex;
       dt : Float;
-      InvalidChecker : EChecker := null;
+      InvalidChecker : EChecker;
+      Env : Environment;
    end record;
 
    -- init world
@@ -23,6 +26,14 @@ package Worlds is
 
    -- Gives the world a function to check if entities are valid or not
    procedure SetInvalidChecker(This : in out World; Invalider : EChecker);
+
+   -- Sets the environment material
+   procedure SetEnvironment(This : in out World; Env : Environment);
+
+   -- This compute the fluid friction between That and the ambiant air in This
+   -- It should depend of the shape and speed of That
+   -- It returns a positive force that will oppose the movement in the end
+   function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D;
 
    -- Remove entity from the world
    -- Entity is detroyed if Destroy is true
@@ -44,8 +55,8 @@ private
 
    procedure ResetForces(Ent : not null access Entity'Class);
 
-   procedure IntForce(Ent : not null access Entity'Class; dt : Float);
+   procedure IntForce(This : in out World; Ent : not null access Entity'Class);
 
-   procedure IntVelocity(Ent : not null access Entity'Class; dt : Float);
+   procedure IntVelocity(This : in out World; Ent : not null access Entity'Class);
 
 end Worlds;

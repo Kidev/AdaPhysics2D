@@ -24,6 +24,7 @@ package body Circles is
       return TmpAcc;
    end Create;
 
+   overriding
    procedure ComputeMass(This : in out Circle)
    is
       Mass : Float;
