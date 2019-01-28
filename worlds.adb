@@ -221,6 +221,7 @@ package body Worlds is
 --     end Step;
 
    -- TODO editing the list while iterating might lead to weird stuff
+   -- pretty sure thise caused the invalid cursor error
    procedure CheckEntities(This : in out World)
    is
    begin

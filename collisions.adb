@@ -251,7 +251,7 @@ package body Collisions is
 
    -- for rectangle / rectangle it is accurate
    -- for circle / rectangle, approximation of the area of the overlap for this collision
-   -- for circle / circle, TODO
+   -- for circle / circle, approximation
    -- Used for Archimede's force
    function OverlapArea(Col : in Collision) return Float
    is
