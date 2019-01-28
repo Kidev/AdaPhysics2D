@@ -15,4 +15,9 @@ package body Materials is
       return That;
    end SetFriction;
 
+   function IsSolidMaterial(This : Material) return Boolean is
+   begin
+      return (MaterialType'Pos(This.MType) < MaterialType'Pos(ETVacuum));
+   end IsSolidMaterial;
+
 end Materials;

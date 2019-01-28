@@ -69,7 +69,7 @@ package body Worlds is
    end SetInvalidChecker;
 
    -- Remove entity from the world
-   procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
+   procedure RemoveEntity(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
       Curs : Cursor := This.Entities.Find(Ent);
    begin
@@ -77,10 +77,10 @@ package body Worlds is
       if Destroy then
          FreeEnt(Ent);
       end if;
-   end Remove;
+   end RemoveEntity;
 
    -- Remove entity from the world
-   procedure RemoveEnv(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
+   procedure RemoveEnvironment(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
       Curs : Cursor := This.Environments.Find(Ent);
    begin
@@ -88,7 +88,7 @@ package body Worlds is
       if Destroy then
          FreeEnt(Ent);
       end if;
-   end RemoveEnv;
+   end RemoveEnvironment;
 
    function GetEntities(This : in out World) return ListAcc
    is
@@ -116,7 +116,7 @@ package body Worlds is
 
       C1 := This.Entities.First;
       while C1 /= No_Element loop
-         This.IntForce(Element(C1));
+         This.IntegrateForces(Element(C1));
          C1 := Next(C1);
       end loop;
 
@@ -140,7 +140,7 @@ package body Worlds is
 
       C1 := This.Entities.First;
       while C1 /= No_Element loop
-         This.IntVelocity(Element(C1));
+         This.IntegrateVelocity(Element(C1));
          C1 := Next(C1);
       end loop;
 
@@ -233,7 +233,7 @@ package body Worlds is
             while Curs /= No_Element loop
                E := Element(Curs);
                if This.InvalidChecker.all(E) then
-                  This.Remove(E, True);
+                  This.RemoveEntity(E, True);
                end if;
                Curs := Next(Curs);
             end loop;
@@ -286,9 +286,9 @@ package body Worlds is
       end if;
 
       declare
-         MostDenseMat : Material := This.GetMostDenseMaterial(That);
-         Density : Float := MostDenseMat.Density;
-         Viscosity : Float := MostDenseMat.Viscosity;
+         MostDenseMat : constant Material := This.GetMostDenseMaterial(That);
+         Density : constant Float := MostDenseMat.Density;
+         Viscosity : constant Float := MostDenseMat.Viscosity;
       begin
          if Density = 0.0 or else Viscosity = 0.0 then
             return (0.0, 0.0);
@@ -342,15 +342,15 @@ package body Worlds is
    end FluidFriction;
 
    -- F: custom force | m: mass | g: grav acc | f(v) >= 0: dynamic friction | pV: density * volume
-   -- m * a = F + mg - f(v) - pVg
+   -- m * a = F + mg - f(v) - pVg [Newton's second law]
    -- m * dv / dt = F + mg - f(v) - pVg
    -- dv = (dt/m) * (F + mg - f(v) - pVg)
    -- dv = (dt/m) * (F + (m - pV)*g - f(v));
    -- Let SF = (F + (m - pV)*g - f(v));
    -- dv = (dt/m) * SF;
-   -- v = v + dv on dt
+   -- v = v + dv [on dt, Euler's integration method]
    -- v = v + (dt * SF)/m;
-   procedure IntForce(This : in out World; Ent : not null access Entity'Class)
+   procedure IntegrateForces(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
@@ -363,15 +363,15 @@ package body Worlds is
       else
          Ent.all.Velocity := (0.0, 0.0);
       end if;
-   end IntForce;
+   end IntegrateForces;
 
-   procedure IntVelocity(This : in out World; Ent : not null access Entity'Class)
+   procedure IntegrateVelocity(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
          Ent.all.Coords := Ent.all.Coords + (Ent.all.Velocity * This.dt);
-         This.IntForce(Ent);
+         This.IntegrateForces(Ent);
       end if;
-   end IntVelocity;
+   end IntegrateVelocity;
 
 end Worlds;

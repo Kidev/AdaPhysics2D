@@ -30,20 +30,22 @@ package Entities is
    -- Frees the entity
    procedure FreeEnt(This : access Entity) is abstract;
 
-   procedure Initialize(This : out Entity; EntType : in EntityTypes;
-                        Pos, Vel, Grav : in Vec2D; Mat : in Material);
+
+
+   -- Apply a force to the entity
+   procedure ApplyForce(This : in out Entity; Force : Vec2D);
+
+   procedure SetGravity(This : in out Entity; Grav : Vec2D);
+
+   procedure SetLayer(This : in out Entity; Lay : Byte);
+
+   procedure AddLayer(This : in out Entity; Lay : Byte);
 
    -- This must be implemented in each new entity class
    -- It converts the Material data into an inverse mass float
    procedure ComputeMass(This : in out Entity) is abstract;
 
-   -- Apply a force to the entity
-   procedure ApplyForce(This : in out Entity; Force : Vec2D);
-
-   procedure SetGrav(This : in out Entity; Grav : Vec2D);
-
-   procedure SetLayer(This : in out Entity; Lay : Byte);
-
-   procedure AddLayer(This : in out Entity; Lay : Byte);
+   procedure Initialize(This : out Entity; EntType : in EntityTypes;
+                        Pos, Vel, Grav : in Vec2D; Mat : in Material);
 
 end Entities;

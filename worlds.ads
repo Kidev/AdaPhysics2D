@@ -35,18 +35,13 @@ package Worlds is
    -- Gives the world a function to check if entities are valid or not
    procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc);
 
-   -- This compute the fluid friction between That and the ambiant air in This
-   -- It should depend of the shape and speed of That
-   -- It returns a positive force that will oppose the movement in the end
-   function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D;
-
    -- Remove entity from the world
    -- Entity is detroyed if Destroy is true
-   procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
+   procedure RemoveEntity(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
 
-   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material;
-
-   function Archimedes(This : in out World; That : access Entity'Class) return Float;
+   -- Remove env from the world
+   -- Entity is detroyed if Destroy is true
+   procedure RemoveEnvironment(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
 
    -- Update the world of dt TODO make it work with the chained list
    -- procedure Step(This : in out World);
@@ -60,15 +55,24 @@ package Worlds is
    -- Get the list of envs
    function GetEnvironments(This : in out World) return ListAcc;
 
-   -- Remove invalid entities according to InvalidChecker, if not null
-   procedure CheckEntities(This : in out World);
-
 private
+
+   -- This compute the fluid friction between That and the ambiant air in This
+   -- It should depend of the shape and speed of That
+   -- It returns a positive force that will oppose the movement in the end
+   function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D;
+
+   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material;
+
+   function Archimedes(This : in out World; That : access Entity'Class) return Float;
 
    procedure ResetForces(Ent : not null access Entity'Class);
 
-   procedure IntForce(This : in out World; Ent : not null access Entity'Class);
+   procedure IntegrateForces(This : in out World; Ent : not null access Entity'Class);
 
-   procedure IntVelocity(This : in out World; Ent : not null access Entity'Class);
+   procedure IntegrateVelocity(This : in out World; Ent : not null access Entity'Class);
+
+   -- Remove invalid entities according to InvalidChecker, if not null
+   procedure CheckEntities(This : in out World);
 
 end Worlds;

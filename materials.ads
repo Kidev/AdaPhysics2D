@@ -1,6 +1,9 @@
 package Materials is
    
-   type MaterialType is (MTConcrete, MTWood, MTSteel, MTRubber, MTIce, MTStatic, ETVacuum, ETAir, ETWater);
+   -- To add materials, keep ETVacuum as the first env type,
+   -- Or IsSolidMaterial will be messed up
+   type MaterialType is (MTConcrete, MTWood, MTSteel, MTRubber, MTIce, MTStatic,
+                         ETVacuum, ETAir, ETWater);
 
    type Material is record
       MType : MaterialType;
@@ -31,5 +34,8 @@ package Materials is
    -- Allows you to change friction for a material
    -- Disables it by default
    function SetFriction(This : Material; FStatic, FDynamic : Float := 0.0) return Material;
+   
+   -- Tells if a material is a solid
+   function IsSolidMaterial(This : Material) return Boolean;
 
 end Materials;

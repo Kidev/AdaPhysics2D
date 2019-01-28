@@ -21,11 +21,11 @@ package body Entities is
       This.Force := This.Force + Force;
    end ApplyForce;
 
-   procedure SetGrav(This : in out Entity; Grav : Vec2D)
+   procedure SetGravity(This : in out Entity; Grav : Vec2D)
    is
    begin
       This.Gravity := Grav;
-   end SetGrav;
+   end SetGravity;
 
    procedure SetLayer(This : in out Entity; Lay : Byte)
    is
