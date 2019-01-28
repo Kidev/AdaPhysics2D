@@ -1,6 +1,6 @@
 # AdaPhysics2D
 
-This is a simple 2D physics engine for Ada. Check the wiki page to see how to use it with examples
+This is a 2D physics engine for Ada. Check the wiki page to see how to use it with examples
 
 # Features
 
@@ -10,5 +10,8 @@ This is a simple 2D physics engine for Ada. Check the wiki page to see how to us
 	- initial position and speed
 	- gravity
 	- material
+* Environments with custom area and material 
 * Custom forces impulsions
-* Solid and fluid friction
+* Solid friction
+* Liquid friction
+* Archimede's principle

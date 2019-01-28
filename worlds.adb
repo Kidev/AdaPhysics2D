@@ -2,6 +2,7 @@ with Collisions; use Collisions;
 with Interfaces; use Interfaces;
 with Circles; use Circles;
 with Rectangles; use Rectangles;
+with Ada.Unchecked_Deallocation;
 
 package body Worlds is
 
@@ -21,32 +22,39 @@ package body Worlds is
    is
    begin
       if This.MaxEntities = 0
-        or else This.Entities.Length + This.Environments.Length < This.MaxEntities then
+        or else Integer(This.Entities.Length) + Integer(This.Environments.Length) < This.MaxEntities then
          This.Entities.Append(Ent);
       end if;
-   end Add;
+   end AddEntity;
 
    -- Add env to the world
    procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if This.MaxEntities = 0
-        or else This.Entities.Length + This.Environments.Length < This.MaxEntities then
+        or else Integer(This.Entities.Length) + Integer(This.Environments.Length) < This.MaxEntities then
          This.Environments.Append(Ent);
       end if;
-   end Add;
+   end AddEnvironment;
 
    -- clear the world (deep free)
    procedure Free(This : in out World)
    is
       procedure FreeList is new Ada.Unchecked_Deallocation(List, ListAcc);
+      Curs : Cursor := This.Entities.First;
    begin
-      for E of This.Entities loop
-         FreeEnt(E);
+
+      while Curs /= No_Element loop
+         FreeEnt(Element(Curs));
+         Curs := Next(Curs);
       end loop;
-      for E of This.Environments loop
-         FreeEnt(E);
+
+      Curs := This.Environments.First;
+      while Curs /= No_Element loop
+         FreeEnt(Element(Curs));
+         Curs := Next(Curs);
       end loop;
+
       FreeList(This.Entities);
       FreeList(This.Environments);
    end Free;
@@ -63,8 +71,9 @@ package body Worlds is
    -- Remove entity from the world
    procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
+      Curs : Cursor := This.Entities.Find(Ent);
    begin
-      This.Entities.Delete(This.Entities.Find(Ent));
+      This.Entities.Delete(Curs);
       if Destroy then
          FreeEnt(Ent);
       end if;
@@ -73,12 +82,13 @@ package body Worlds is
    -- Remove entity from the world
    procedure RemoveEnv(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
+      Curs : Cursor := This.Environments.Find(Ent);
    begin
-      This.Environments.Delete(This.Environments.Find(Ent));
+      This.Environments.Delete(Curs);
       if Destroy then
          FreeEnt(Ent);
       end if;
-   end Remove;
+   end RemoveEnv;
 
    function GetEntities(This : in out World) return ListAcc
    is
@@ -104,8 +114,10 @@ package body Worlds is
       Col : Collision;
    begin
 
-      for E of This.Entities loop
-         This.IntForce(E);
+      C1 := This.Entities.First;
+      while C1 /= No_Element loop
+         This.IntForce(Element(C1));
+         C1 := Next(C1);
       end loop;
 
       -- Broad phase
@@ -126,12 +138,16 @@ package body Worlds is
          C1 := Next(C1);
       end loop;
 
-      for E of This.Entities loop
-         This.IntVelocity(E);
+      C1 := This.Entities.First;
+      while C1 /= No_Element loop
+         This.IntVelocity(Element(C1));
+         C1 := Next(C1);
       end loop;
 
-      for E of This.Entities loop
-         ResetForces(E);
+      C1 := This.Entities.First;
+      while C1 /= No_Element loop
+         ResetForces(Element(C1));
+         C1 := Next(C1);
       end loop;
 
       This.CheckEntities;
@@ -209,11 +225,20 @@ package body Worlds is
    is
    begin
       if This.InvalidChecker /= null then
-         for E of This.Entities loop
-            if This.InvalidChecker.all(E) then
-               This.Remove(E, True);
-            end if;
-         end loop;
+
+         declare
+            Curs : Cursor := This.Entities.First;
+            E : access Entity'Class;
+         begin
+            while Curs /= No_Element loop
+               E := Element(Curs);
+               if This.InvalidChecker.all(E) then
+                  This.Remove(E, True);
+               end if;
+               Curs := Next(Curs);
+            end loop;
+         end;
+
       end if;
    end CheckEntities;
 
@@ -233,11 +258,11 @@ package body Worlds is
    is
       TotalCoef : Float := 0.0; -- >= 0.0
    begin
-      if This.Environments.Length = 0 then
+      if Integer(This.Environments.Length) = 0 then
          return 0.0;
       end if;
       return TotalCoef;
-   end ArchimedesPrinciple;
+   end Archimedes;
 
    function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material
    is
@@ -256,7 +281,7 @@ package body Worlds is
    is
       QuadraticLimit : constant Float := 5.0;
    begin
-      if This.Environments.Length = 0 then
+      if Integer(This.Environments.Length) = 0 then
          return (0.0, 0.0);
       end if;
 
