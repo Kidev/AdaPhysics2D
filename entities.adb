@@ -35,7 +35,7 @@ package body Entities is
    procedure AddLayer(This : in out Entity; Lay : Byte)
    is
    begin
-      This.Layer := This.Layer and Lay;
+      This.Layer := This.Layer or Lay;
    end AddLayer;
 
 end Entities;

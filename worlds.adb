@@ -154,6 +154,7 @@ package body Worlds is
 
    end StepLowRAM;
 
+   -- TODO redo the RAM heavy step procedure
    -- Update the world of dt
 --     procedure Step(This : in out World)
 --     is
@@ -220,26 +221,31 @@ package body Worlds is
 --
 --     end Step;
 
-   -- TODO editing the list while iterating might lead to weird stuff
-   -- pretty sure thise caused the invalid cursor error
    procedure CheckEntities(This : in out World)
    is
    begin
       if This.InvalidChecker /= null then
-
          declare
-            Curs : Cursor := This.Entities.First;
             E : access Entity'Class;
+            Edited : Boolean := False;
          begin
-            while Curs /= No_Element loop
-               E := Element(Curs);
-               if This.InvalidChecker.all(E) then
-                  This.RemoveEntity(E, True);
-               end if;
-               Curs := Next(Curs);
+            loop
+               declare
+                  Curs : Cursor := This.Entities.First;
+               begin
+                  while Curs /= No_Element loop
+                     E := Element(Curs);
+                     if This.InvalidChecker.all(E) then
+                        This.RemoveEntity(E, True);
+                        Edited := True;
+                        exit;
+                     end if;
+                     Curs := Next(Curs);
+                  end loop;
+               end;
+               exit when not Edited;
             end loop;
          end;
-
       end if;
    end CheckEntities;
 
@@ -249,12 +255,6 @@ package body Worlds is
       Ent.Force := Vec2D'(x => 0.0, y => 0.0);
    end ResetForces;
 
-   -- TODO
-   -- for each env it is in, TotalCoef += Rho_env * Area_overlap_ent_env
-   -- approximate circles with rectangles, and *(4 - pi) to reduce for circles (0.86)
-   -- x_overlap = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
-   -- y_overlap = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
-   -- overlapArea = x_overlap * y_overlap;
    function Archimedes(This : in out World; That : access Entity'Class) return Float
    is
       TotalCoef : Float := 0.0; -- >= 0.0
@@ -291,7 +291,7 @@ package body Worlds is
       return ReturnMat;
    end GetDensestMaterial;
 
-   -- This compute the fluid friction between That and the env That is in (in This)
+   -- This computes the fluid friction between That and the env That is in (in This)
    -- It should depend of the shape and speed of That
    -- It returns a positive force that will oppose the movement in the end
    function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D
