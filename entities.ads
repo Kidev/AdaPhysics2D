@@ -24,13 +24,12 @@ package Entities is
       Gravity : Vec2D;
       Layer : Byte := 2#00000001#;
    end record;
+   pragma Pack (Entity);
 
    type EntityClassAcc is access all Entity'Class;
 
    -- Frees the entity
    procedure FreeEnt(This : access Entity) is abstract;
-
-
 
    -- Apply a force to the entity
    procedure ApplyForce(This : in out Entity; Force : Vec2D);

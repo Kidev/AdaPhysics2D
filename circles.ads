@@ -7,6 +7,8 @@ package Circles is
    type Circle is new Entities.Entity with record
       Radius : Float;
    end record;
+   pragma Pack (Circle);
+
    type CircleAcc is access all Circle;
 
    -- Create a new Circle

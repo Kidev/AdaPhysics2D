@@ -7,6 +7,8 @@ package Rectangles is
    type Rectangle is new Entities.Entity with record
       Dim : Vec2D; -- (x => width, y => height)
    end record;
+   pragma Pack (Rectangle);
+
    type RectangleAcc is access all Rectangle;
 
    -- Create a new Rectangle

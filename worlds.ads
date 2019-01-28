@@ -19,6 +19,7 @@ package Worlds is
       dt : Float;
       InvalidChecker : EntCheckerAcc;
    end record;
+   pragma Pack (World);
 
    -- init world
    procedure Init(This : in out World; dt : in Float; MaxEnts : Natural := 32);
