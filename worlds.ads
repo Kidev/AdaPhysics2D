@@ -1,12 +1,11 @@
 with Entities; use Entities;
 with Materials; use Materials;
 with Vectors2D; use Vectors2D;
+with Ada.Containers.Doubly_Linked_Lists;
 
 package Worlds is
 
-   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(access Entity'Class);
-   use DoublyLinkedListEnts;
-   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(access Entity'Class);
+   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(EntityClassAcc);
    use DoublyLinkedListEnts;
 
    type ListAcc is access List;
@@ -28,10 +27,10 @@ package Worlds is
    procedure Free(This : in out World);
 
    -- Add entity to the world
-   procedure Add(This : in out World; Ent : not null access Entity'Class);
+   procedure AddEntity(This : in out World; Ent : not null access Entity'Class);
 
    -- Add env to the world
-   procedure AddEnv(This : in out World; Ent : not null access Entity'Class)
+   procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class);
 
    -- Gives the world a function to check if entities are valid or not
    procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc);
@@ -55,8 +54,11 @@ package Worlds is
    -- Update the world of dt with low ram usage
    procedure StepLowRAM(This : in out World);
 
-   -- Get an array of entities
-   function GetEntities(This : in out World) return EArray;
+   -- Get the list of entities
+   function GetEntities(This : in out World) return ListAcc;
+
+   -- Get the list of envs
+   function GetEnvironments(This : in out World) return ListAcc;
 
    -- Remove invalid entities according to InvalidChecker, if not null
    procedure CheckEntities(This : in out World);

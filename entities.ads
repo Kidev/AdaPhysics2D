@@ -25,6 +25,8 @@ package Entities is
       Layer : Byte := 2#00000001#;
    end record;
 
+   type EntityClassAcc is access Entity'Class;
+
    -- Frees the entity
    procedure FreeEnt(This : access Entity) is abstract;
 

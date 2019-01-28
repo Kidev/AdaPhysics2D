@@ -17,7 +17,7 @@ package body Worlds is
    end Init;
 
    -- Add entity to the world
-   procedure Add(This : in out World; Ent : not null access Entity'Class)
+   procedure AddEntity(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if This.MaxEntities = 0
@@ -27,7 +27,7 @@ package body Worlds is
    end Add;
 
    -- Add env to the world
-   procedure AddEnv(This : in out World; Ent : not null access Entity'Class)
+   procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if This.MaxEntities = 0
@@ -83,8 +83,14 @@ package body Worlds is
    function GetEntities(This : in out World) return ListAcc
    is
    begin
+      return This.Entities;
+   end GetEntities;
+
+   function GetEnvironments(This : in out World) return ListAcc
+   is
+   begin
       return This.Environments;
-   end;
+   end GetEnvironments;
 
    -- This procedure will perform Collision resolution
    -- in a way that doesnt require as much RAM as the Step
