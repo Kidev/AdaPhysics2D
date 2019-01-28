@@ -264,19 +264,28 @@ package body Worlds is
       return TotalCoef;
    end Archimedes;
 
-   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material
+   function GetDensestMaterial(This : in out World; That : access Entity'Class) return Material
    is
+      ReturnMat : Material := VACUUM;
+      Curs : Cursor := This.Environments.First;
+      Env : access Entity'Class;
+      Col : Collision; -- TODO create a collide without all the normal / penetration stuff to optimize
    begin
-      return VACUUM;
-   end GetMostDenseMaterial;
 
-   -- TODO
+      while Curs /= No_Element loop
+         Env := Element(Curs);
+         if Env.Mat.Density > ReturnMat.Density and then Collide(Env, That, Col) then
+            ReturnMat := Env.Mat;
+         end if;
+         Curs := Next(Curs);
+      end loop;
+
+      return ReturnMat;
+   end GetDensestMaterial;
+
    -- This compute the fluid friction between That and the env That is in (in This)
    -- It should depend of the shape and speed of That
    -- It returns a positive force that will oppose the movement in the end
-   -- Cx_circle : 0.47 | Cx_rect : 1.05
-   -- S_circle : 3.14 * This.Radius | S_rect : (That.Dim.x + That.Dim.y) / 2.0;
-   -- k_circle : 6.0 * 3.14 * This.Radius | k_rect : 6.0 * 3.14 * (That.Dim.x + That.Dim.y) / 2.0
    function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D
    is
       QuadraticLimit : constant Float := 5.0;
@@ -286,7 +295,7 @@ package body Worlds is
       end if;
 
       declare
-         MostDenseMat : constant Material := This.GetMostDenseMaterial(That);
+         MostDenseMat : constant Material := This.GetDensestMaterial(That);
          Density : constant Float := MostDenseMat.Density;
          Viscosity : constant Float := MostDenseMat.Viscosity;
       begin
@@ -355,7 +364,6 @@ package body Worlds is
    begin
       if Ent.all.InvMass /= 0.0 then
 	declare
-            --SF : constant Vec2D := (((Ent.Force - This.FluidFriction(Ent)) * Ent.InvMass) + Ent.Gravity);
             SF : constant Vec2D := Ent.Force + (Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity - This.FluidFriction(Ent);
 	begin
             Ent.all.Velocity := Ent.all.Velocity + (SF * This.dt * Ent.InvMass);

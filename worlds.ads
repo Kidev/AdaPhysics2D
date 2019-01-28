@@ -58,12 +58,12 @@ package Worlds is
 
 private
 
-   -- This compute the fluid friction between That and the ambiant air in This
+   -- This compute the fluid friction between That and the env That is in (in This)
    -- It should depend of the shape and speed of That
    -- It returns a positive force that will oppose the movement in the end
    function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D;
 
-   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material;
+   function GetDensestMaterial(This : in out World; That : access Entity'Class) return Material;
 
    function Archimedes(This : in out World; That : access Entity'Class) return Float;
 
