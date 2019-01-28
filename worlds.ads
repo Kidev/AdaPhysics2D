@@ -4,31 +4,37 @@ with Vectors2D; use Vectors2D;
 
 package Worlds is
 
-   -- fixed number of entities
-   subtype EntArrIndex is Integer range 0 .. 64;
-   type EntArray is array (EntArrIndex) of access Entity'Class;
-   type EArray is array (EntArrIndex range <>) of access Entity'Class;
-   type EChecker is access function(E : access Entity'Class) return Boolean;
+   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(access Entity'Class);
+   use DoublyLinkedListEnts;
+   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(access Entity'Class);
+   use DoublyLinkedListEnts;
+
+   type ListAcc is access List;
+
+   type EntCheckerAcc is access function(E : access Entity'Class) return Boolean;
 
    type World is tagged record
-      Entities : EntArray;
-      Index : EntArrIndex;
+      Entities : ListAcc;
+      Environments : ListAcc;
+      MaxEntities : Natural;
       dt : Float;
-      InvalidChecker : EChecker;
-      Env : Environment;
+      InvalidChecker : EntCheckerAcc;
    end record;
 
    -- init world
-   procedure Init(This : in out World; dt : in Float);
+   procedure Init(This : in out World; dt : in Float; MaxEnts : Natural := 32);
+
+   -- clear the world (deep free)
+   procedure Free(This : in out World);
 
    -- Add entity to the world
    procedure Add(This : in out World; Ent : not null access Entity'Class);
 
-   -- Gives the world a function to check if entities are valid or not
-   procedure SetInvalidChecker(This : in out World; Invalider : EChecker);
+   -- Add env to the world
+   procedure AddEnv(This : in out World; Ent : not null access Entity'Class)
 
-   -- Sets the environment material
-   procedure SetEnvironment(This : in out World; Env : Environment);
+   -- Gives the world a function to check if entities are valid or not
+   procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc);
 
    -- This compute the fluid friction between That and the ambiant air in This
    -- It should depend of the shape and speed of That
@@ -39,8 +45,12 @@ package Worlds is
    -- Entity is detroyed if Destroy is true
    procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
 
-   -- Update the world of dt
-   procedure Step(This : in out World);
+   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material;
+
+   function Archimedes(This : in out World; That : access Entity'Class) return Float;
+
+   -- Update the world of dt TODO make it work with the chained list
+   -- procedure Step(This : in out World);
 
    -- Update the world of dt with low ram usage
    procedure StepLowRAM(This : in out World);

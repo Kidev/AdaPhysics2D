@@ -9,6 +9,8 @@ package body Entities is
       This.Velocity := Vel;
       This.Force := Vec2D'(x => 0.0, y => 0.0);
       This.InvMass := 0.0; -- needs to be set for each entity with ComputeMass
+      This.Mass := 0.0; -- needs to be set for each entity with ComputeMass
+      This.Volume := 0.0; -- is in fact the area, needs to be set for each ...
       This.Mat := Mat;
       This.Gravity := Grav;
    end Initialize;

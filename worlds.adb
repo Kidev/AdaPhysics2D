@@ -6,28 +6,53 @@ with Rectangles; use Rectangles;
 package body Worlds is
 
    -- init world
-   procedure Init(This : in out World; dt : in Float)
+   procedure Init(This : in out World; dt : in Float; MaxEnts : Natural := 32)
    is
    begin
-      This.Index := 0;
+      This.MaxEntities := MaxEnts;
       This.dt := dt;
-      This.Entities := (others => null);
+      This.Entities := new List;
+      This.Environments := new List;
       This.InvalidChecker := null;
-      This.Env := VACUUM;
    end Init;
 
    -- Add entity to the world
    procedure Add(This : in out World; Ent : not null access Entity'Class)
    is
    begin
-      if This.Index < EntArrIndex'Last then
-         This.Index := This.Index + 1;
-         This.Entities(This.Index) := Ent;
+      if This.MaxEntities = 0
+        or else This.Entities.Length + This.Environments.Length < This.MaxEntities then
+         This.Entities.Append(Ent);
       end if;
    end Add;
 
+   -- Add env to the world
+   procedure AddEnv(This : in out World; Ent : not null access Entity'Class)
+   is
+   begin
+      if This.MaxEntities = 0
+        or else This.Entities.Length + This.Environments.Length < This.MaxEntities then
+         This.Environments.Append(Ent);
+      end if;
+   end Add;
+
+   -- clear the world (deep free)
+   procedure Free(This : in out World)
+   is
+      procedure FreeList is new Ada.Unchecked_Deallocation(List, ListAcc);
+   begin
+      for E of This.Entities loop
+         FreeEnt(E);
+      end loop;
+      for E of This.Environments loop
+         FreeEnt(E);
+      end loop;
+      FreeList(This.Entities);
+      FreeList(This.Environments);
+   end Free;
+
    -- Gives the world a function to check if entities are valid or not
-   procedure SetInvalidChecker(This : in out World; Invalider : EChecker)
+   procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc)
    is
    begin
       if Invalider /= null then
@@ -38,31 +63,27 @@ package body Worlds is
    -- Remove entity from the world
    procedure Remove(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
-      Ents : constant EArray := This.GetEntities;
    begin
-      for I in Ents'Range loop
-         if Ents(I) = Ent then
-            if Destroy then
-               FreeEnt(Ent);
-            end if;
-            This.Entities(I) := null;
-            for J in I + 1 .. Ents'Last loop
-               This.Entities(J - 1) := Ents(J);
-            end loop;
-            This.Index := This.Index - 1;
-            exit;
-         end if;
-      end loop;
+      This.Entities.Delete(This.Entities.Find(Ent));
+      if Destroy then
+         FreeEnt(Ent);
+      end if;
    end Remove;
 
-   function GetEntities(This : in out World) return EArray
+   -- Remove entity from the world
+   procedure RemoveEnv(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
-      Ret : EArray (1 .. This.Index);
    begin
-      for I in Ret'Range loop
-         Ret(I) := This.Entities(I);
-      end loop;
-      return Ret;
+      This.Environments.Delete(This.Environments.Find(Ent));
+      if Destroy then
+         FreeEnt(Ent);
+      end if;
+   end Remove;
+
+   function GetEntities(This : in out World) return ListAcc
+   is
+   begin
+      return This.Environments;
    end;
 
    -- This procedure will perform Collision resolution
@@ -73,33 +94,38 @@ package body Worlds is
    procedure StepLowRAM(This : in out World)
    is
       A, B : access Entity'Class;
+      C1, C2 : Cursor;
       Col : Collision;
    begin
 
-      for I in 1 .. This.Index loop
-         This.IntForce(This.Entities(I));
+      for E of This.Entities loop
+         This.IntForce(E);
       end loop;
 
       -- Broad phase
-      for I in 1 .. This.Index loop
-         A := This.Entities(I);
-         for J in I .. This.Index loop
-            B := This.Entities(J);
+      C1 := This.Entities.First;
+      while C1 /= No_Element loop
+         A := Element(C1);
+         C2 := Next(C1);
+         while C2 /= No_Element loop
+            B := Element(C2);
             -- Narrow phase
-            if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
+            if (A.all.Layer and B.all.Layer) /= 2#00000000#
               and then Collide(A, B, Col) then
                Resolve(Col);
                PosCorrection(Col);
             end if;
+            C2 := Next(C2);
          end loop;
+         C1 := Next(C1);
       end loop;
 
-      for I in 1 .. This.Index loop
-         This.IntVelocity(This.Entities(I));
+      for E of This.Entities loop
+         This.IntVelocity(E);
       end loop;
 
-      for I in 1 .. This.Index loop
-         ResetForces(This.Entities(I));
+      for E of This.Entities loop
+         ResetForces(E);
       end loop;
 
       This.CheckEntities;
@@ -107,74 +133,81 @@ package body Worlds is
    end StepLowRAM;
 
    -- Update the world of dt
-   procedure Step(This : in out World)
-   is
-      -- TODO the 2 lines below crashes the RAM on STM32 when This.Index >= 13
-      -- The number of max collisions would be 78, and its too much for the RAM
-      subtype ColIndex is Natural range 0 .. ((This.Index * (This.Index - 1)) / 2);
-      type ColArray is array (ColIndex) of Collision;
-      Cols : ColArray;
-      A, B : access Entity'Class;
-      Count : ColIndex := 0;
-   begin
-      -- Broad phase
-      for I in 1 .. This.Index loop
-         A := This.Entities(I);
-         for J in I .. This.Index loop
-            B := This.Entities(J);
-            -- Narrow phase
-            if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
-              and then Collide(A, B, Cols(Count)) then
-               Count := Count + 1;
-            end if;
-         end loop;
-      end loop;
+--     procedure Step(This : in out World)
+--     is
+--        Cols : List;
+--        Col : access Collision;
+--        A, B : access Entity'Class;
+--        C1, C2 : Cursor;
+--        Count : ColIndex := 0;
+--     begin
+--
+--        -- Broad phase
+--        C1 := This.Entities.First;
+--        while C1 /= No_Element loop
+--           A := Element(C1);
+--           C2 := Next(C1);
+--           while C2 /= No_Element loop
+--              B := Element(C2);
+--              -- Narrow phase
+--              Col := new Collision;
+--              if (A.all.Layer and B.all.Layer) /= 2#00000000#
+--                and then Collide(A, B, Col) then
+--                 Resolve(Col);
+--                 PosCorrection(Col);
+--              end if;
+--              C2 := Next(C2);
+--           end loop;
+--           C1 := Next(C1);
+--        end loop;
+--
+--        -- Broad phase
+--        for I in 1 .. This.Index loop
+--           A := This.Entities(I);
+--           for J in I .. This.Index loop
+--              B := This.Entities(J);
+--              -- Narrow phase
+--              if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
+--                and then Collide(A, B, Cols(Count)) then
+--                 Count := Count + 1;
+--              end if;
+--           end loop;
+--        end loop;
+--
+--        for I in 1 .. This.Index loop
+--           This.IntForce(This.Entities(I));
+--        end loop;
+--
+--        for I in 0 .. Count - 1 loop
+--           Resolve(Cols(I));
+--        end loop;
+--
+--        for I in 1 .. This.Index loop
+--           This.IntVelocity(This.Entities(I));
+--        end loop;
+--
+--        for I in 0 .. Count - 1 loop
+--           PosCorrection(Cols(I));
+--        end loop;
+--
+--        for I in 1 .. This.Index loop
+--           ResetForces(This.Entities(I));
+--        end loop;
+--
+--        This.CheckEntities;
+--
+--     end Step;
 
-      for I in 1 .. This.Index loop
-         This.IntForce(This.Entities(I));
-      end loop;
-
-      for I in 0 .. Count - 1 loop
-         Resolve(Cols(I));
-      end loop;
-
-      for I in 1 .. This.Index loop
-         This.IntVelocity(This.Entities(I));
-      end loop;
-
-      for I in 0 .. Count - 1 loop
-         PosCorrection(Cols(I));
-      end loop;
-
-      for I in 1 .. This.Index loop
-         ResetForces(This.Entities(I));
-      end loop;
-
-      This.CheckEntities;
-
-   end Step;
-
+   -- TODO editing the list while iterating might lead to weird stuff
    procedure CheckEntities(This : in out World)
    is
    begin
       if This.InvalidChecker /= null then
-         declare
-            Edited : Boolean := False;
-            LastI : EntArrIndex := 1;
-         begin
-            loop
-               Edited := False;
-               for I in LastI .. This.Index loop
-                  if This.InvalidChecker.all(This.Entities(I)) then
-                     This.Remove(This.Entities(I), True);
-                     Edited := True;
-                     LastI := I;
-                     exit;
-                  end if;
-               end loop;
-               exit when Edited = False;
-            end loop;
-         end;
+         for E of This.Entities loop
+            if This.InvalidChecker.all(E) then
+               This.Remove(E, True);
+            end if;
+         end loop;
       end if;
    end CheckEntities;
 
@@ -184,14 +217,30 @@ package body Worlds is
       Ent.Force := Vec2D'(x => 0.0, y => 0.0);
    end ResetForces;
 
-   -- Sets the env density. 0.0 disables fluid friction
-   procedure SetEnvironment(This : in out World; Env : Environment)
+   -- TODO
+   -- for each env it is in, TotalCoef += Rho_env * Area_overlap_ent_env
+   -- approximate circles with rectangles
+   -- x_overlap = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
+   -- y_overlap = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
+   -- overlapArea = x_overlap * y_overlap;
+   function Archimedes(This : in out World; That : access Entity'Class) return Float
+   is
+      TotalCoef : Float := 0.0; -- >= 0.0
+   begin
+      if This.Environments.Length = 0 then
+         return 0.0;
+      end if;
+      return TotalCoef;
+   end ArchimedesPrinciple;
+
+   function GetMostDenseMaterial(This : in out World; That : access Entity'Class) return Material
    is
    begin
-      This.Env := Env;
-   end SetEnvironment;
+      return VACUUM;
+   end GetMostDenseMaterial;
 
-   -- This compute the fluid friction between That and the ambiant air in This
+   -- TODO
+   -- This compute the fluid friction between That and the env That is in (in This)
    -- It should depend of the shape and speed of That
    -- It returns a positive force that will oppose the movement in the end
    -- Cx_circle : 0.47 | Cx_rect : 1.05
@@ -201,73 +250,85 @@ package body Worlds is
    is
       QuadraticLimit : constant Float := 5.0;
    begin
-      if This.Env.Density = 0.0 or else This.Env.Viscosity = 0.0 then
+      if This.Environments.Length = 0 then
          return (0.0, 0.0);
       end if;
-      if MagSq(That.Velocity) >= QuadraticLimit * QuadraticLimit then
+
+      declare
+         MostDenseMat : Material := This.GetMostDenseMaterial(That);
+         Density : Float := MostDenseMat.Density;
+         Viscosity : Float := MostDenseMat.Viscosity;
+      begin
+         if Density = 0.0 or else Viscosity = 0.0 then
+            return (0.0, 0.0);
+         end if;
+         if MagSq(That.Velocity) >= QuadraticLimit * QuadraticLimit then
+            declare
+
+               function GetCx(Ent : access Entity'Class) return Float is
+               begin
+                  case Ent.EntityType is
+                     when EntCircle => return 0.47;
+                     when EntRectangle => return 1.05;
+                  end case;
+               end GetCx;
+
+               function GetS(Ent : access Entity'Class) return Float is
+               begin
+                  case Ent.EntityType is
+                     when EntCircle =>
+                        return 3.14 * CircleAcc(Ent).Radius;
+                     when EntRectangle =>
+                        return (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
+                  end case;
+               end GetS;
+
+               Rho : constant Float := Density; -- Density for the env
+               S : constant Float := GetS(That); -- "Area" normal to speed
+               Cx : constant Float := GetCx(That); -- Drag coeff
+            begin
+               return 0.5 * Rho * S * Cx * Sq(That.Velocity);
+            end;
+         end if;
          declare
 
-            function GetCx(Ent : access Entity'Class) return Float is
-            begin
-               case Ent.EntityType is
-                  when EntCircle => return 0.47;
-                  when EntRectangle => return 1.05;
-               end case;
-            end GetCx;
-
-            function GetS(Ent : access Entity'Class) return Float is
+            function GetK(Ent : access Entity'Class) return Float is
             begin
                case Ent.EntityType is
                   when EntCircle =>
-                     return 3.14 * CircleAcc(Ent).Radius;
+                     return 6.0 * 3.14 * CircleAcc(Ent).Radius;
                   when EntRectangle =>
-                     return (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
+                     return 6.0 * 3.14 * (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
                end case;
-            end GetS;
+            end GetK;
 
-            Rho : constant Float := This.Env.Density; -- Density for the env
-            S : constant Float := GetS(That); -- "Area" normal to speed
-            Cx : constant Float := GetCx(That); -- Drag coeff
+            Nu : constant Float := Viscosity * Density; -- viscosity coeff for env
+            k : constant Float := GetK(That); -- shape coeff for That
          begin
-            return 0.5 * Rho * S * Cx * Sq(That.Velocity);
+            return Nu * k * That.Velocity;
          end;
-      end if;
-      declare
-
-         function GetK(Ent : access Entity'Class) return Float is
-         begin
-            case Ent.EntityType is
-               when EntCircle =>
-                  return 6.0 * 3.14 * CircleAcc(Ent).Radius;
-               when EntRectangle =>
-                  return 6.0 * 3.14 * (RectangleAcc(Ent).Dim.x + RectangleAcc(Ent).Dim.y) / 2.0;
-            end case;
-         end GetK;
-
-         Nu : constant Float := This.Env.Viscosity * This.Env.Density; -- viscosity coeff for env
-         k : constant Float := GetK(That); -- shape coeff for That
-      begin
-         return Nu * k * That.Velocity;
       end;
    end FluidFriction;
 
-   -- F: custom force | m: mass | g: grav acc | f(v) >= 0: dynamic friction, function of speed
-   -- F = f(v) - mg [Newton's 2nd Law]
-   -- F + mg - f(v) = 0
-   -- F/m + g - f(v)/m = 0
-   -- (F-f(v))/m + g = 0
-   -- Let A = ((F-f(v))/m + g), so A = 0
-   -- A + v/dt = v/dt [Euler's integration method]
-   -- v = v + A*dt
+   -- F: custom force | m: mass | g: grav acc | f(v) >= 0: dynamic friction | pV: density * volume
+   -- m * a = F + mg - f(v) - pVg
+   -- m * dv / dt = F + mg - f(v) - pVg
+   -- dv = (dt/m) * (F + mg - f(v) - pVg)
+   -- dv = (dt/m) * (F + (m - pV)*g - f(v));
+   -- Let SF = (F + (m - pV)*g - f(v));
+   -- dv = (dt/m) * SF;
+   -- v = v + dv on dt
+   -- v = v + (dt * SF)/m;
    procedure IntForce(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
-         declare
-            A : constant Vec2D := (((Ent.Force - This.FluidFriction(Ent)) * Ent.InvMass) + Ent.Gravity);
-         begin
-            Ent.all.Velocity := Ent.all.Velocity + (A * This.dt);
-         end;
+	declare
+            --SF : constant Vec2D := (((Ent.Force - This.FluidFriction(Ent)) * Ent.InvMass) + Ent.Gravity);
+            SF : constant Vec2D := Ent.Force + (Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity - This.FluidFriction(Ent);
+	begin
+            Ent.all.Velocity := Ent.all.Velocity + (SF * This.dt * Ent.InvMass);
+	end;
       else
          Ent.all.Velocity := (0.0, 0.0);
       end if;

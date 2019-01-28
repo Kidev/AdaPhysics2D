@@ -29,7 +29,9 @@ package body Circles is
    is
       Mass : Float;
    begin
-      Mass := Ada.Numerics.Pi * This.Radius * This.Radius * This.Mat.Density;
+      This.Volume := Ada.Numerics.Pi * This.Radius * This.Radius;
+      Mass := This.Volume * This.Mat.Density;
+      This.Mass := Mass;
       This.InvMass := (if Mass = 0.0 then 0.0 else 1.0 / Mass);
    end ComputeMass;
 

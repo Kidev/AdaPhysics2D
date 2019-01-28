@@ -45,7 +45,9 @@ package body Rectangles is
    is
       Mass : Float;
    begin
-      Mass := This.Dim.x * This.Dim.y * This.Mat.Density;
+      This.Volume := This.Dim.x * This.Dim.y;
+      Mass := This.Volume * This.Mat.Density;
+      This.Mass := Mass;
       This.InvMass := (if Mass = 0.0 then 0.0 else 1.0 / Mass);
    end ComputeMass;
    
