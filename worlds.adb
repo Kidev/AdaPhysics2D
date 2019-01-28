@@ -263,7 +263,7 @@ package body Worlds is
    begin
       while Curs /= No_Element loop
          Env := Element(Curs);
-         if Collide(Env, That, Col) then
+         if Env.Mat.Density > 0.0 and then Collide(Env, That, Col) then
             TotalCoef := TotalCoef + (Env.Mat.Density * OverlapArea(Col));
          end if;
          Curs := Next(Curs);
@@ -371,7 +371,7 @@ package body Worlds is
    begin
       if Ent.all.InvMass /= 0.0 then
 	declare
-            SF : constant Vec2D := Ent.Force + (Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity - This.FluidFriction(Ent);
+            SF : constant Vec2D := Ent.Force + ((Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity) - This.FluidFriction(Ent);
 	begin
             Ent.all.Velocity := Ent.all.Velocity + (SF * This.dt * Ent.InvMass);
 	end;
