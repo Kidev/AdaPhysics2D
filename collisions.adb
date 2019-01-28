@@ -1,6 +1,3 @@
-with Circles;
-with Rectangles;
-
 package body Collisions is
 
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
@@ -251,6 +248,80 @@ package body Collisions is
       A.Velocity := A.Velocity - (A.InvMass * Correction);
       B.Velocity := B.Velocity + (B.InvMass * Correction);
    end PosCorrection;
+
+   -- for rectangle / rectangle it is accurate
+   -- for circle / rectangle, approximation of the area of the overlap for this collision
+   -- for circle / circle, TODO
+   -- Used for Archimede's force
+   function OverlapArea(Col : in Collision) return Float
+   is
+   begin
+      if Col.A.EntityType = EntCircle and Col.B.EntityType = EntCircle then
+         return OverlapAreaCircleCircle(Circles.CircleAcc(Col.A), Circles.CircleAcc(Col.B));
+      end if;
+      if Col.A.EntityType = EntRectangle and Col.B.EntityType = EntRectangle then
+         return OverlapAreaRectangleRectangle(Col.A.Coords, Rectangles.RectangleAcc(Col.A).Dim,
+                                              Col.B.Coords, Rectangles.RectangleAcc(Col.B).Dim);
+      end if;
+      if Col.A.EntityType = EntRectangle and Col.B.EntityType = EntCircle then
+         return OverlapAreaCircleRectangle(Circles.CircleAcc(Col.B), Rectangles.RectangleAcc(Col.A));
+      end if;
+      if Col.A.EntityType = EntCircle and Col.B.EntityType = EntRectangle then
+         return OverlapAreaCircleRectangle(Circles.CircleAcc(Col.A), Rectangles.RectangleAcc(Col.B));
+      end if;
+      return 0.0;
+   end OverlapArea;
+
+   -- http://jsfiddle.net/Lqh3mjr5/
+   function OverlapAreaRectangleRectangle(PosA, DimA, PosB, DimB : Vec2D) return Float
+   is
+      d1x : constant Float := PosA.x;
+      d1y : constant Float := PosA.y;
+      d1xMax : constant Float := d1x + DimA.x;
+      d1yMax : constant Float := d1y + DimA.y;
+
+      d2x : constant Float := PosB.x;
+      d2y : constant Float := PosB.y;
+      d2xMax : constant Float := d2x + DimB.x;
+      d2yMax : constant Float := d2y + DimB.y;
+
+      xOverlap : constant Float := Float'Max(0.0, Float'Min(d1xMax, d2xMax) - Float'Max(d1x, d2x));
+      yOverlap : constant Float := Float'Max(0.0, Float'Min(d1yMax, d2yMax) - Float'Max(d1y, d2y));
+   begin
+      return xOverlap * yOverlap;
+   end OverlapAreaRectangleRectangle;
+
+   function OverlapAreaCircleCircle(A, B : Circles.CircleAcc) return Float
+   is
+      CheatConst : constant Float := 0.84 * 0.84; -- AreaSquare - AreaCircle = 0.84
+      PosA : constant Vec2D := A.Coords - (A.Radius, A.Radius);
+      DimA : constant Vec2D := 2.0 * (A.Radius, A.Radius);
+      PosB : constant Vec2D := B.Coords - (B.Radius, B.Radius);
+      DimB : constant Vec2D := 2.0 * (B.Radius, B.Radius);
+   begin
+      return CheatConst * OverlapAreaRectangleRectangle(PosA, DimA, PosB, DimB);
+   end OverlapAreaCircleCircle;
+
+   function OverlapAreaCircleRectangle(A : Circles.CircleAcc; B : Rectangles.RectangleAcc) return Float
+   is
+      CheatConst : constant Float := 0.84; -- AreaSquare - AreaCircle = 0.84
+      PosA : constant Vec2D := A.Coords - (A.Radius, A.Radius);
+      DimA : constant Vec2D := 2.0 * (A.Radius, A.Radius);
+   begin
+      return CheatConst * OverlapAreaRectangleRectangle(PosA, DimA, B.Coords, B.Dim);
+   end OverlapAreaCircleRectangle;
+
+--  with Ada.Numerics.Generic_Elementary_Functions;
+--     function OverlapAreaCircleRectangle(Radius, Height : Float) return Float
+--     is
+--        package TrigoFuncs is new Ada.Numerics.Generic_Elementary_Functions(Float);
+--        use TrigoFuncs;
+--        Param : constant Float := Clamp((1.0 - (Height / Radius)), -1.0, 1.0);
+--        Alpha : constant Float := 2.0 * Arccos(Param);
+--        Area : constant Float := 0.5 * Radius * Radius * (Alpha - Sin(Alpha));
+--     begin
+--        return Area;
+--     end OverlapAreaCircleRectangle;
 
    function Clamp(Value, Min, Max : Float) return Float
    is

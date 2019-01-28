@@ -27,12 +27,9 @@ package body Circles is
    overriding
    procedure ComputeMass(This : in out Circle)
    is
-      Mass : Float;
    begin
-      This.Volume := Ada.Numerics.Pi * This.Radius * This.Radius;
-      Mass := This.Volume * This.Mat.Density;
-      This.Mass := Mass;
-      This.InvMass := (if Mass = 0.0 then 0.0 else 1.0 / Mass);
+      This.Mass := Ada.Numerics.Pi * This.Radius * This.Radius * This.Mat.Density;
+      This.InvMass := (if This.Mass = 0.0 then 0.0 else 1.0 / This.Mass);
    end ComputeMass;
 
    procedure FreeEnt(This : access Circle)

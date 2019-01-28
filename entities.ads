@@ -19,7 +19,6 @@ package Entities is
       Force : Vec2D;
       InvMass : Float;
       Mass : Float;
-      Volume : Float;
       Mat : Material;
       Gravity : Vec2D;
       Layer : Byte := 2#00000001#;

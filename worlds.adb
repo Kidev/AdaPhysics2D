@@ -250,17 +250,24 @@ package body Worlds is
 
    -- TODO
    -- for each env it is in, TotalCoef += Rho_env * Area_overlap_ent_env
-   -- approximate circles with rectangles
+   -- approximate circles with rectangles, and *(4 - pi) to reduce for circles (0.86)
    -- x_overlap = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
    -- y_overlap = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
    -- overlapArea = x_overlap * y_overlap;
    function Archimedes(This : in out World; That : access Entity'Class) return Float
    is
       TotalCoef : Float := 0.0; -- >= 0.0
+      Curs : Cursor := This.Environments.First;
+      Env : access Entity'Class;
+      Col : Collision;
    begin
-      if Integer(This.Environments.Length) = 0 then
-         return 0.0;
-      end if;
+      while Curs /= No_Element loop
+         Env := Element(Curs);
+         if Collide(Env, That, Col) then
+            TotalCoef := TotalCoef + (Env.Mat.Density * OverlapArea(Col));
+         end if;
+         Curs := Next(Curs);
+      end loop;
       return TotalCoef;
    end Archimedes;
 

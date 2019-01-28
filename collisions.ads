@@ -1,5 +1,7 @@
 with Entities; use Entities;
 with Vectors2D; use Vectors2D;
+with Circles;
+with Rectangles;
 
 package Collisions is
 
@@ -27,6 +29,10 @@ package Collisions is
    -- Ensures that objects do not sink in each other
    procedure PosCorrection(Col : in Collision);
 
+   -- Returns an approximation of the area of the overlap for this collision
+   -- Used for Archimede's force
+   function OverlapArea(Col : in Collision) return Float;
+
 private
 
    function Friction(A, B : Float) return Float;
@@ -40,5 +46,11 @@ private
    function RectangleOnCircle(Col : in out Collision) return Boolean;
 
    function CircleOnRectangle(Col : in out Collision) return Boolean;
+
+   function OverlapAreaCircleRectangle(A : Circles.CircleAcc; B : Rectangles.RectangleAcc) return Float;
+
+   function OverlapAreaCircleCircle(A, B : Circles.CircleAcc) return Float;
+
+   function OverlapAreaRectangleRectangle(PosA, DimA, PosB, DimB : Vec2D) return Float;
 
 end Collisions;
