@@ -72,4 +72,14 @@ package body Vectors2D is
       return This / Norm;
    end Normalize;
 
+   function Clamp(Value, Min, Max : Float) return Float
+   is
+   begin
+
+      if Value < Min then return Min; end if;
+      if Value > Max then return Max; end if;
+      return Value;
+
+   end Clamp;
+
 end Vectors2D;

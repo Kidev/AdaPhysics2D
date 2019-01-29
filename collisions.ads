@@ -37,8 +37,6 @@ private
 
    function Friction(A, B : Float) return Float;
 
-   function Clamp(Value, Min, Max : Float) return Float;
-
    function CircleOnCircle(Col : in out Collision) return Boolean;
 
    function RectangleOnRectangle(Col : in out Collision) return Boolean;

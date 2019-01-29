@@ -39,4 +39,10 @@ package Vectors2D is
 
    function Sq(This : Vec2D) return Vec2D;
 
+   function Clamp(Value, Min, Max : Float) return Float;
+
+   function Clamp(This : Vec2D; Max : Vec2D) return Vec2D is
+     (x => (if Max.x = 0.0 then This.x else Clamp(This.x, -Max.x, Max.x)),
+      y => (if Max.y = 0.0 then This.y else Clamp(This.y, -Max.y, Max.y)));
+
 end Vectors2D;

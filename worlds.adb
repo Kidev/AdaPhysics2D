@@ -15,6 +15,7 @@ package body Worlds is
       This.Entities := new List;
       This.Environments := new List;
       This.InvalidChecker := null;
+      This.MaxSpeed := (0.0, 0.0);
    end Init;
 
    -- Add entity to the world
@@ -26,6 +27,11 @@ package body Worlds is
          This.Entities.Append(Ent);
       end if;
    end AddEntity;
+
+   procedure SetMaxSpeed(This : in out World; Speed : Vec2D) is
+   begin
+      This.MaxSpeed := Speed;
+   end SetMaxSpeed;
 
    -- Add env to the world
    procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class)
@@ -231,6 +237,7 @@ package body Worlds is
             Edited : Boolean := False;
          begin
             loop
+               Edited := False;
                declare
                   Curs : Cursor := This.Entities.First;
                begin
@@ -239,8 +246,8 @@ package body Worlds is
                      if This.InvalidChecker.all(E) then
                         This.RemoveEntity(E, True);
                         Edited := True;
-                        exit;
                      end if;
+                     exit when Edited;
                      Curs := Next(Curs);
                   end loop;
                end;
@@ -374,8 +381,9 @@ package body Worlds is
       if Ent.all.InvMass /= 0.0 then
 	declare
             SF : constant Vec2D := Ent.Force + ((Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity) - This.FluidFriction(Ent);
+            SpeedAdded : constant Vec2D := (SF * This.dt * Ent.InvMass);
 	begin
-            Ent.all.Velocity := Ent.all.Velocity + (SF * This.dt * Ent.InvMass);
+            Ent.all.Velocity := Clamp(Ent.all.Velocity + SpeedAdded, This.MaxSpeed);
 	end;
       else
          Ent.all.Velocity := (0.0, 0.0);

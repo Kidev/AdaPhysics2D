@@ -18,6 +18,7 @@ package Worlds is
       MaxEntities : Natural;
       dt : Float;
       InvalidChecker : EntCheckerAcc;
+      MaxSpeed : Vec2D;
    end record;
    pragma Pack (World);
 
@@ -55,6 +56,10 @@ package Worlds is
 
    -- Get the list of envs
    function GetEnvironments(This : in out World) return ListAcc;
+
+   -- Lets you set a maximum speed >= 0
+   -- If max speed = 0 -> no max speed on that axis
+   procedure SetMaxSpeed(This : in out World; Speed : Vec2D);
 
 private
 

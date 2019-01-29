@@ -323,14 +323,4 @@ package body Collisions is
 --        return Area;
 --     end OverlapAreaCircleRectangle;
 
-   function Clamp(Value, Min, Max : Float) return Float
-   is
-   begin
-
-      if Value < Min then return Min; end if;
-      if Value > Max then return Max; end if;
-      return Value;
-
-   end Clamp;
-
 end Collisions;

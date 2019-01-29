@@ -2,7 +2,7 @@ package Materials is
    
    -- To add materials, keep ETVacuum as the first env type,
    -- Or IsSolidMaterial will be messed up
-   type MaterialType is (MTConcrete, MTWood, MTSteel, MTRubber, MTIce, MTStatic,
+   type MaterialType is (MTConcrete, MTWood, MTSteel, MTRubber, MTIce, MTBalloon, MTStatic,
                          ETVacuum, ETAir, ETWater);
 
    type Material is record
@@ -21,6 +21,7 @@ package Materials is
    STEEL : constant Material := (MTSteel, 7.8, 0.1, 0.1, 0.05, 0.0);
    RUBBER : constant Material := (MTRubber, 0.3, 0.8, 0.1, 0.05, 0.0);
    ICE : constant Material := (MTIce, 0.9, 0.3, 0.01, 0.001, 0.0);
+   BALLOON : constant Material := (MTBalloon, 0.0005, 0.1, 0.1, 0.05, 0.0);
    STATIC : constant Material := (MTStatic, 0.0, 1.0, 1.0, 1.0, 0.0);
    
    -- Liquid / Gaz / V O I D
