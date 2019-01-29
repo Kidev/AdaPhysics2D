@@ -54,7 +54,8 @@ package body Worlds is
          FreeEnt(Element(Curs));
          Curs := Next(Curs);
       end loop;
-
+      This.Entities.Clear;
+      This.Environments.Clear;
       FreeList(This.Entities);
       FreeList(This.Environments);
    end Free;
