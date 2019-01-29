@@ -175,7 +175,7 @@ package body Collisions is
    begin
 
       -- Ignore collision between static objects
-      if A.InvMass + B.InvMass = 0.0 then
+      if A.InvMass = 0.0 and B.InvMass = 0.0 then
          A.Velocity := Vec2D'(0.0, 0.0);
          B.Velocity := Vec2D'(0.0, 0.0);
          return;
@@ -271,6 +271,14 @@ package body Collisions is
       end if;
       return 0.0;
    end OverlapArea;
+
+   -- A fast approximation of collision detection. Usefull for when precision is not important
+   function CollideEx(A, B : access Entity'Class) return Boolean
+   is
+      Col : constant Collision := (A, B, (0.0, 0.0), 0.0);
+   begin
+      return (OverlapArea(Col) /= 0.0);
+   end CollideEx;
 
    -- http://jsfiddle.net/Lqh3mjr5/
    function OverlapAreaRectangleRectangle(PosA, DimA, PosB, DimB : Vec2D) return Float

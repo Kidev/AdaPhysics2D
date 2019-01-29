@@ -20,6 +20,9 @@ package Collisions is
    function Collide(A, B : not null access Entity'Class; Col : out Collision)
                     return Boolean;
 
+   -- A fast approximation of collision detection. Usefull for when precision is not important
+   function CollideEx(A, B : access Entity'Class) return Boolean;
+
    -- This procedure is called when there is a collision
    -- It impulses on A and B so that they no longer collide
    -- Solves for friction too
