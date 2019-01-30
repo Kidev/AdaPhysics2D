@@ -2,21 +2,24 @@ with Entities; use Entities;
 with Materials; use Materials;
 with Vectors2D; use Vectors2D;
 with Ada.Containers.Doubly_Linked_Lists;
+with Links; use Links;
 
 package Worlds is
 
-   package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(EntityClassAcc);
-   use DoublyLinkedListEnts;
+   package EntsList is new Ada.Containers.Doubly_Linked_Lists(EntityClassAcc);
+   type EntsListAcc is access EntsList.List;
+
+   package LinksList is new Ada.Containers.Doubly_Linked_Lists(LinkAcc);
+   type LinksListAcc is access LinksList.List;
 
    type SearchModes is (SM_Entity, SM_Environment, SM_All);
-
-   type ListAcc is access List;
 
    type EntCheckerAcc is access function(E : access Entity'Class) return Boolean;
 
    type World is tagged record
-      Entities : ListAcc;
-      Environments : ListAcc;
+      Entities : EntsListAcc;
+      Environments : EntsListAcc;
+      Links : LinksListAcc;
       MaxEntities : Natural;
       dt : Float;
       InvalidChecker : EntCheckerAcc;
@@ -35,6 +38,10 @@ package Worlds is
 
    -- Add env to the world
    procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class);
+
+   -- Add a link between two entities
+   procedure AddLink(This : in out World; A, B : EntityClassAcc; Factor : Float);
+   procedure AddLink(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes);
 
    -- Gives the world a function to check if entities are valid or not
    procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc);
@@ -58,10 +65,10 @@ package Worlds is
    procedure StepLowRAM(This : in out World);
 
    -- Get the list of entities
-   function GetEntities(This : in out World) return ListAcc;
+   function GetEntities(This : in out World) return EntsListAcc;
 
    -- Get the list of envs
-   function GetEnvironments(This : in out World) return ListAcc;
+   function GetEnvironments(This : in out World) return EntsListAcc;
 
    -- Lets you set a maximum speed >= 0
    -- If max speed = 0 -> no max speed on that axis

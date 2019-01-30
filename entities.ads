@@ -4,7 +4,7 @@ with Interfaces; use Interfaces;
 
 package Entities is
 
-   -- List all the entity types
+   -- Lists all the entity types
    type EntityTypes is (EntCircle, EntRectangle);
 
    -- Required for layering

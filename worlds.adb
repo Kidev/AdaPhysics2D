@@ -3,6 +3,7 @@ with Interfaces; use Interfaces;
 with Circles; use Circles;
 with Rectangles; use Rectangles;
 with Ada.Unchecked_Deallocation;
+with Worlds; use Worlds;
 
 package body Worlds is
 
@@ -12,8 +13,9 @@ package body Worlds is
    begin
       This.MaxEntities := MaxEnts;
       This.dt := dt;
-      This.Entities := new List;
-      This.Environments := new List;
+      This.Entities := new EntsList.List;
+      This.Environments := new EntsList.List;
+      This.Links := new LinksList.List;
       This.InvalidChecker := null;
       This.MaxSpeed := (0.0, 0.0);
    end Init;
@@ -43,22 +45,32 @@ package body Worlds is
       end if;
    end AddEnvironment;
 
+   procedure AddLink(This : in out World; A, B : EntityClassAcc; Factor : Float) is
+   begin
+      null;
+   end AddLink;
+   procedure AddLink(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes) is
+   begin
+      null;
+   end AddLink;
+
    -- clear the world (deep free)
    procedure Free(This : in out World)
    is
-      procedure FreeList is new Ada.Unchecked_Deallocation(List, ListAcc);
-      Curs : Cursor := This.Entities.First;
+      use EntsList;
+      procedure FreeList is new Ada.Unchecked_Deallocation(EntsList.List, EntsListAcc);
+      Curs : EntsList.Cursor := This.Entities.First;
    begin
 
-      while Curs /= No_Element loop
-         FreeEnt(Element(Curs));
-         Curs := Next(Curs);
+      while Curs /= EntsList.No_Element loop
+         FreeEnt(EntsList.Element(Curs));
+         Curs := EntsList.Next(Curs);
       end loop;
 
       Curs := This.Environments.First;
-      while Curs /= No_Element loop
-         FreeEnt(Element(Curs));
-         Curs := Next(Curs);
+      while Curs /= EntsList.No_Element loop
+         FreeEnt(EntsList.Element(Curs));
+         Curs := EntsList.Next(Curs);
       end loop;
       This.Entities.Clear;
       This.Environments.Clear;
@@ -78,7 +90,7 @@ package body Worlds is
    -- Remove entity from the world
    procedure RemoveEntity(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
-      Curs : Cursor := This.Entities.Find(Ent);
+      Curs : EntsList.Cursor := This.Entities.Find(Ent);
    begin
       This.Entities.Delete(Curs);
       if Destroy then
@@ -89,7 +101,7 @@ package body Worlds is
    -- Remove entity from the world
    procedure RemoveEnvironment(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
    is
-      Curs : Cursor := This.Environments.Find(Ent);
+      Curs : EntsList.Cursor := This.Environments.Find(Ent);
    begin
       This.Environments.Delete(Curs);
       if Destroy then
@@ -97,7 +109,7 @@ package body Worlds is
       end if;
    end RemoveEnvironment;
 
-   function GetEntities(This : in out World) return ListAcc
+   function GetEntities(This : in out World) return EntsListAcc
    is
    begin
       return This.Entities;
@@ -105,18 +117,19 @@ package body Worlds is
 
    function GetClosest(This : in out World; Pos : Vec2D; SearchMode : SearchModes := SM_All) return EntityClassAcc
    is
-      EntList : constant ListAcc := (if SearchMode = SM_All or SearchMode = SM_Entity
+      use EntsList;
+      EntList : constant EntsListAcc := (if SearchMode = SM_All or SearchMode = SM_Entity
                                      then This.Entities
                                      else This.Environments);
-      Curs : Cursor := EntList.First;
+      Curs : EntsList.Cursor := EntList.First;
       Ent : EntityClassAcc;
    begin
-      while Curs /= No_Element loop
-         Ent := Element(Curs);
+      while Curs /= EntsList.No_Element loop
+         Ent := EntsList.Element(Curs);
          if IsInside(Pos, Ent) then
             return Ent;
          end if;
-         Curs := Next(Curs);
+         Curs := EntsList.Next(Curs);
       end loop;
       if SearchMode = SM_All then
          return This.GetClosest(Pos, SM_Environment);
@@ -124,7 +137,7 @@ package body Worlds is
       return null;
    end GetClosest;
 
-   function GetEnvironments(This : in out World) return ListAcc
+   function GetEnvironments(This : in out World) return EntsListAcc
    is
    begin
       return This.Environments;
@@ -137,45 +150,46 @@ package body Worlds is
    -- The result might be less realistic, but more efficient
    procedure StepLowRAM(This : in out World)
    is
+      use EntsList;
       A, B : access Entity'Class;
-      C1, C2 : Cursor;
+      C1, C2 : EntsList.Cursor;
       Col : Collision;
    begin
 
       C1 := This.Entities.First;
-      while C1 /= No_Element loop
-         This.IntegrateForces(Element(C1));
-         C1 := Next(C1);
+      while C1 /= EntsList.No_Element loop
+         This.IntegrateForces(EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
       end loop;
 
       -- Broad phase
       C1 := This.Entities.First;
-      while C1 /= No_Element loop
-         A := Element(C1);
-         C2 := Next(C1);
-         while C2 /= No_Element loop
-            B := Element(C2);
+      while C1 /= EntsList.No_Element loop
+         A := EntsList.Element(C1);
+         C2 := EntsList.Next(C1);
+         while C2 /= EntsList.No_Element loop
+            B := EntsList.Element(C2);
             -- Narrow phase
             if (A.all.Layer and B.all.Layer) /= 2#00000000#
               and then Collide(A, B, Col) then
                Resolve(Col);
                PosCorrection(Col);
             end if;
-            C2 := Next(C2);
+            C2 := EntsList.Next(C2);
          end loop;
-         C1 := Next(C1);
+         C1 := EntsList.Next(C1);
       end loop;
 
       C1 := This.Entities.First;
-      while C1 /= No_Element loop
-         This.IntegrateVelocity(Element(C1));
-         C1 := Next(C1);
+      while C1 /= EntsList.No_Element loop
+         This.IntegrateVelocity(EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
       end loop;
 
       C1 := This.Entities.First;
-      while C1 /= No_Element loop
-         ResetForces(Element(C1));
-         C1 := Next(C1);
+      while C1 /= EntsList.No_Element loop
+         ResetForces(EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
       end loop;
 
       This.CheckEntities;
@@ -186,20 +200,21 @@ package body Worlds is
    -- Update the world of dt
 --     procedure Step(This : in out World)
 --     is
---        Cols : List;
+--        use EntsList;
+--        Cols : EntsList.List;
 --        Col : access Collision;
 --        A, B : access Entity'Class;
---        C1, C2 : Cursor;
+--        C1, C2 : EntsList.Cursor;
 --        Count : ColIndex := 0;
 --     begin
 --
 --        -- Broad phase
 --        C1 := This.Entities.First;
---        while C1 /= No_Element loop
---           A := Element(C1);
---           C2 := Next(C1);
---           while C2 /= No_Element loop
---              B := Element(C2);
+--        while C1 /= EntsList.No_Element loop
+--           A := EntsList.Element(C1);
+--           C2 := EntsList.Next(C1);
+--           while C2 /= EntsList.No_Element loop
+--              B := EntsList.Element(C2);
 --              -- Narrow phase
 --              Col := new Collision;
 --              if (A.all.Layer and B.all.Layer) /= 2#00000000#
@@ -207,9 +222,9 @@ package body Worlds is
 --                 Resolve(Col);
 --                 PosCorrection(Col);
 --              end if;
---              C2 := Next(C2);
+--              C2 := EntsList.Next(C2);
 --           end loop;
---           C1 := Next(C1);
+--           C1 := EntsList.Next(C1);
 --        end loop;
 --
 --        -- Broad phase
@@ -260,16 +275,17 @@ package body Worlds is
             loop
                Edited := False;
                declare
-                  Curs : Cursor := This.Entities.First;
+                  use EntsList;
+                  Curs : EntsList.Cursor := This.Entities.First;
                begin
-                  while Curs /= No_Element loop
-                     E := Element(Curs);
+                  while Curs /= EntsList.No_Element loop
+                     E := EntsList.Element(Curs);
                      if This.InvalidChecker.all(E) then
                         This.RemoveEntity(E, True);
                         Edited := True;
                      end if;
                      exit when Edited;
-                     Curs := Next(Curs);
+                     Curs := EntsList.Next(Curs);
                   end loop;
                end;
                exit when not Edited;
@@ -286,35 +302,37 @@ package body Worlds is
 
    function Archimedes(This : in out World; That : access Entity'Class) return Float
    is
+      use EntsList;
       TotalCoef : Float := 0.0; -- >= 0.0
-      Curs : Cursor := This.Environments.First;
+      Curs : EntsList.Cursor := This.Environments.First;
       Env : access Entity'Class;
       Col : Collision;
    begin
-      while Curs /= No_Element loop
-         Env := Element(Curs);
+      while Curs /= EntsList.No_Element loop
+         Env := EntsList.Element(Curs);
          if Env.Mat.Density > 0.0 and then Collide(Env, That, Col) then
             TotalCoef := TotalCoef + (Env.Mat.Density * OverlapArea(Col));
          end if;
-         Curs := Next(Curs);
+         Curs := EntsList.Next(Curs);
       end loop;
       return TotalCoef;
    end Archimedes;
 
    function GetDensestMaterial(This : in out World; That : access Entity'Class) return Material
    is
+      use EntsList;
       ReturnMat : Material := VACUUM;
-      Curs : Cursor := This.Environments.First;
+      Curs : EntsList.Cursor := This.Environments.First;
       Env : access Entity'Class;
       Col : Collision; -- TODO create a collide without all the normal / penetration stuff to optimize
    begin
 
-      while Curs /= No_Element loop
-         Env := Element(Curs);
+      while Curs /= EntsList.No_Element loop
+         Env := EntsList.Element(Curs);
          if Env.Mat.Density > ReturnMat.Density and then Collide(Env, That, Col) then
             ReturnMat := Env.Mat;
          end if;
-         Curs := Next(Curs);
+         Curs := EntsList.Next(Curs);
       end loop;
 
       return ReturnMat;
