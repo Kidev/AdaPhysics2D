@@ -1,13 +1,8 @@
-with Ada.Numerics.Generic_Elementary_Functions;
-
-package Vectors2D is
-
-   package flGEF is new Ada.Numerics.Generic_Elementary_Functions(Float);
-   use flGEF;
+package Vectors2D with SPARK_Mode => On is
 
    type Vec2D is record
-      x : Float;
-      y : Float;
+      x : Float := 0.0;
+      y : Float := 0.0;
    end record;
 
    function "=" (Left, Right : Vec2D) return Boolean;
@@ -33,16 +28,25 @@ package Vectors2D is
 
    function MagSq(This : Vec2D) return Float;
 
-   function Mag(This : Vec2D) return Float;
+   function Mag(This : Vec2D) return Float with SPARK_Mode => Off;
 
-   function Normalize(This : Vec2D) return Vec2D;
+   function Normalize(This : Vec2D) return Vec2D with SPARK_Mode => Off;
 
    function Sq(This : Vec2D) return Vec2D;
 
-   function Clamp(Value, Min, Max : Float) return Float;
+   function Clamp(Value, Min, Max : Float) return Float
+     with Pre => Min <= Max,
+          Contract_Cases => (Value < Min => Clamp'Result = Min,
+                             Value > Max => Clamp'Result = Max,
+                             others => Clamp'Result = Value),
+          Depends => (Clamp'Result => (Value, Min, Max));
 
-   function Clamp(This : Vec2D; Max : Vec2D) return Vec2D is
-     (x => (if Max.x = 0.0 then This.x else Clamp(This.x, -Max.x, Max.x)),
-      y => (if Max.y = 0.0 then This.y else Clamp(This.y, -Max.y, Max.y)));
+   function ClampVec(This : Vec2D; Max : Vec2D) return Vec2D
+     with Contract_Cases => (Max.x = 0.0 and Max.y /= 0.0 => abs ClampVec'Result.y <= abs Max.y,
+                             Max.x /= 0.0 and Max.y = 0.0 => abs ClampVec'Result.x <= abs Max.x,
+                             others => (if Max = (0.0, 0.0)
+                                          then ClampVec'Result = This
+                                          else ClampVec'Result.y <= abs Max.y and abs ClampVec'Result.x <= abs Max.x)),
+          Depends => (ClampVec'Result => (This, Max));
 
 end Vectors2D;

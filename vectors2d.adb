@@ -1,3 +1,5 @@
+with Ada.Numerics.Generic_Elementary_Functions;
+
 package body Vectors2D is
 
    function "=" (Left, Right : Vec2D) return Boolean is
@@ -54,8 +56,9 @@ package body Vectors2D is
    end MagSq;
 
    function Mag(This : Vec2D) return Float is
+      package flGEF is new Ada.Numerics.Generic_Elementary_Functions(Float);
    begin
-      return Sqrt(MagSq(This));
+      return flGEF.Sqrt(MagSq(This));
    end Mag;
 
    function Sq(This : Vec2D) return Vec2D is
@@ -81,5 +84,12 @@ package body Vectors2D is
       return Value;
 
    end Clamp;
+
+   function ClampVec(This : Vec2D; Max : Vec2D) return Vec2D is
+      pragma Assume(This.x'Valid and This.y'Valid and Max.x'Valid and Max.y'Valid);
+   begin
+      return (x => (if Max.x = 0.0 then This.x else Clamp(This.x, -Max.x, Max.x)),
+              y => (if Max.y = 0.0 then This.y else Clamp(This.y, -Max.y, Max.y)));
+   end ClampVec;
 
 end Vectors2D;
