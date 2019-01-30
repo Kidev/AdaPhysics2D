@@ -383,7 +383,7 @@ package body Worlds is
             SF : constant Vec2D := Ent.Force + ((Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity) - This.FluidFriction(Ent);
             SpeedAdded : constant Vec2D := (SF * This.dt * Ent.InvMass);
 	begin
-            Ent.all.Velocity := Ent.all.Velocity + SpeedAdded; -- Clamp(Ent.all.Velocity + SpeedAdded, This.MaxSpeed);
+            Ent.all.Velocity := Clamp(Ent.all.Velocity + SpeedAdded, This.MaxSpeed); -- Ent.all.Velocity + SpeedAdded
 	end;
       else
          Ent.all.Velocity := (0.0, 0.0);
