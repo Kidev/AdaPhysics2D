@@ -14,6 +14,9 @@ package Circles is
    -- Create a new Circle
    function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return CircleAcc;
 
+   overriding
+   function GetPosition(This : in Circle) return Vec2D;
+
 private
 
    -- Initialization of a Circle

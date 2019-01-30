@@ -164,7 +164,7 @@ package body Worlds is
       end if;
    end RemoveEnvironment;
 
-   function GetEntities(This : in out World) return EntsListAcc
+   function GetEntities(This : in World) return EntsListAcc
    is
    begin
       return This.Entities;
@@ -192,13 +192,13 @@ package body Worlds is
       return null;
    end GetClosest;
 
-   function GetEnvironments(This : in out World) return EntsListAcc
+   function GetEnvironments(This : in World) return EntsListAcc
    is
    begin
       return This.Environments;
    end GetEnvironments;
 
-   function GetLinks(This : in out World) return LinksListAcc
+   function GetLinks(This : in World) return LinksListAcc
    is
    begin
       return This.Links;
@@ -466,6 +466,35 @@ package body Worlds is
       end;
    end FluidFriction;
 
+   function Tension(This : in out World; Ent : access Entity'Class) return Vec2D
+   is
+      use LinksList;
+      TotalForce : Vec2D := (0.0, 0.0);
+      Curs : LinksList.Cursor := This.Links.First;
+      Target : access Entity'Class;
+      CurLink : LinkAcc;
+      TmpDistance : Float := 0.0;
+      AddForce : Vec2D;
+   begin
+      while Curs /= LinksList.No_Element loop
+         CurLink := LinksList.Element(Curs);
+         Target := null;
+         if CurLink.A = Ent then
+            Target := CurLink.B;
+         elsif CurLink.B = Ent then
+            Target := CurLink.A;
+         end if;
+         if Target /= null then
+            TmpDistance := GetDistance(Ent.all, Target.all);
+            AddForce := (CurLink.Factor * (TmpDistance - CurLink.RestLen)
+                         * (1.0 / TmpDistance) * (Target.GetPosition - Ent.GetPosition));
+            TotalForce := TotalForce + AddForce;
+         end if;
+         Curs := LinksList.Next(Curs);
+      end loop;
+      return TotalForce;
+   end Tension;
+
    -- F: custom force | m: mass | g: grav acc | f(v) >= 0: dynamic friction | pV: density * volume
    -- m * a = F + mg - f(v) - pVg [Newton's second law]
    -- m * dv / dt = F + mg - f(v) - pVg
@@ -480,7 +509,9 @@ package body Worlds is
    begin
       if Ent.all.InvMass /= 0.0 then
 	declare
-            SF : constant Vec2D := Ent.Force + ((Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity) - This.FluidFriction(Ent);
+            SF : constant Vec2D :=
+              Ent.Force + This.Tension(Ent) - This.FluidFriction(Ent)
+              + ((Ent.Mass - This.Archimedes(Ent)) * Ent.Gravity);
             SpeedAdded : constant Vec2D := (SF * This.dt * Ent.InvMass);
 	begin
             Ent.all.Velocity := ClampVec(Ent.all.Velocity + SpeedAdded, This.MaxSpeed); -- Ent.all.Velocity + SpeedAdded

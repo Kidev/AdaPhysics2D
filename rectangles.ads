@@ -14,9 +14,12 @@ package Rectangles is
    -- Create a new Rectangle
    function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return RectangleAcc;
    
-   function GetWidth(This : in out Rectangle) return Float;
-   function GetHeight(This : in out Rectangle) return Float;
-   function GetCenter(This : in out Rectangle) return Vec2D;
+   function GetWidth(This : in Rectangle) return Float;
+   function GetHeight(This : in Rectangle) return Float;
+   function GetCenter(This : in Rectangle) return Vec2D;
+   
+   overriding
+   function GetPosition(This : in Rectangle) return Vec2D;
    
 private
 

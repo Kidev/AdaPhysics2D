@@ -63,7 +63,7 @@ package Worlds is
    -- Update the world of dt TODO make it work with the chained list
    -- procedure Step(This : in out World);
 
-   -- Returns the closest entity to Pos in this world
+   -- Returns the entity in which Pos is
    -- If SearchMode = SM_All, searches first entities, then envs (ents are "on top")
    function GetClosest(This : in out World; Pos : Vec2D; SearchMode : SearchModes := SM_All) return EntityClassAcc;
 
@@ -71,13 +71,13 @@ package Worlds is
    procedure StepLowRAM(This : in out World);
 
    -- Get the list of entities
-   function GetEntities(This : in out World) return EntsListAcc;
+   function GetEntities(This : in World) return EntsListAcc;
 
    -- Get the list of envs
-   function GetEnvironments(This : in out World) return EntsListAcc;
+   function GetEnvironments(This : in World) return EntsListAcc;
 
    -- Get the list of links
-   function GetLinks(This : in out World) return LinksListAcc;
+   function GetLinks(This : in World) return LinksListAcc;
 
    -- Lets you set a maximum speed >= 0
    -- If max speed = 0 -> no max speed on that axis
@@ -93,6 +93,8 @@ private
    function GetDensestMaterial(This : in out World; That : access Entity'Class) return Material;
 
    function Archimedes(This : in out World; That : access Entity'Class) return Float;
+
+   function Tension(This : in out World; Ent : access Entity'Class) return Vec2D;
 
    procedure ResetForces(Ent : not null access Entity'Class);
 

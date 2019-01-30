@@ -21,6 +21,12 @@ package body Entities is
       This.ComputeMass;
    end ChangeMaterial;
 
+   function GetDistance(A, B : in Entity'Class) return Float
+   is
+   begin
+      return Mag(B.GetPosition - A.GetPosition);
+   end GetDistance;
+
    procedure ApplyForce(This : in out Entity; Force : Vec2D)
    is
    begin

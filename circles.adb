@@ -40,4 +40,11 @@ package body Circles is
       FreeCircle(P);
    end FreeEnt;
 
+   overriding
+   function GetPosition(This : in Circle) return Vec2D
+   is
+   begin
+      return This.Coords;
+   end GetPosition;
+
 end Circles;

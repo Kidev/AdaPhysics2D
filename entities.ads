@@ -36,9 +36,15 @@ package Entities is
    -- Update material
    procedure ChangeMaterial(This : in out Entity'Class; NewMat : Material);
 
+   -- Get distance between two entities
+   function GetDistance(A, B : in Entity'Class) return Float;
+
    procedure SetGravity(This : in out Entity; Grav : Vec2D);
 
    procedure SetLayer(This : in out Entity; Lay : Byte);
+
+   -- Gets the center position of an entity
+   function GetPosition(This : in Entity) return Vec2D is abstract;
 
    procedure AddLayer(This : in out Entity; Lay : Byte);
 

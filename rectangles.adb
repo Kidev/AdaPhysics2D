@@ -23,19 +23,19 @@ package body Rectangles is
       return TmpAcc;
    end Create;
    
-   function GetHeight(This : in out Rectangle) return Float
+   function GetHeight(This : in Rectangle) return Float
    is
    begin
       return This.Dim.y;
    end GetHeight;
 
-   function GetWidth(This : in out Rectangle) return Float
+   function GetWidth(This : in Rectangle) return Float
    is
    begin
       return This.Dim.x;
    end GetWidth;
    
-   function GetCenter(This : in out Rectangle) return Vec2D
+   function GetCenter(This : in Rectangle) return Vec2D
    is
    begin
       return This.Coords + (This.Dim / 2.0);
@@ -55,5 +55,12 @@ package body Rectangles is
    begin
       FreeRectangle(P);
    end FreeEnt;
+   
+   overriding
+   function GetPosition(This : in Rectangle) return Vec2D
+   is
+   begin
+      return This.GetCenter;
+   end GetPosition;
 
 end Rectangles;
