@@ -39,9 +39,15 @@ package Worlds is
    -- Add env to the world
    procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class);
 
-   -- Add a link between two entities
-   procedure AddLink(This : in out World; A, B : EntityClassAcc; Factor : Float);
-   procedure AddLink(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes);
+   -- Add a link between two entities (rope, spring...)
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; Factor : Float);
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes);
+
+   -- Remove all links tied to the passed entity
+   procedure UnlinkEntity(This : in out World; E : EntityClassAcc);
+
+   -- Increases the number of max entities by Count
+   procedure IncreaseMaxEntities(This : in out World; Count : Positive);
 
    -- Gives the world a function to check if entities are valid or not
    procedure SetInvalidChecker(This : in out World; Invalider : EntCheckerAcc);

@@ -20,12 +20,21 @@ package body Worlds is
       This.MaxSpeed := (0.0, 0.0);
    end Init;
 
+   procedure IncreaseMaxEntities(This : in out World; Count : Positive)
+   is
+   begin
+      This.MaxEntities := This.MaxEntities + Count;
+   end AddMaxEntities;
+
    -- Add entity to the world
    procedure AddEntity(This : in out World; Ent : not null access Entity'Class)
    is
    begin
       if This.MaxEntities = 0
-        or else Integer(This.Entities.Length) + Integer(This.Environments.Length) < This.MaxEntities then
+        or else Integer(This.Entities.Length)
+              + Integer(This.Environments.Length)
+              + Integer(This.Links.Length) < This.MaxEntities
+      then
          This.Entities.Append(Ent);
       end if;
    end AddEntity;
@@ -40,19 +49,58 @@ package body Worlds is
    is
    begin
       if This.MaxEntities = 0
-        or else Integer(This.Entities.Length) + Integer(This.Environments.Length) < This.MaxEntities then
+        or else Integer(This.Entities.Length)
+              + Integer(This.Environments.Length)
+              + Integer(This.Links.Length) < This.MaxEntities
+      then
          This.Environments.Append(Ent);
       end if;
    end AddEnvironment;
 
-   procedure AddLink(This : in out World; A, B : EntityClassAcc; Factor : Float) is
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; Factor : Float) is
    begin
-      null;
-   end AddLink;
-   procedure AddLink(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes) is
+      if This.MaxEntities = 0
+        or else Integer(This.Entities.Length)
+              + Integer(This.Environments.Length)
+              + Integer(This.Links.Length) < This.MaxEntities
+      then
+         This.Links.Append(CreateLink(A, B, Factor));
+      end if;
+   end LinkEntities;
+
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes) is
    begin
-      null;
-   end AddLink;
+      if This.MaxEntities = 0
+        or else Integer(This.Entities.Length)
+              + Integer(This.Environments.Length)
+              + Integer(This.Links.Length) < This.MaxEntities
+      then
+         This.Links.Append(CreateLink(A, B, LinkType));
+      end if;
+   end LinkEntities;
+
+   procedure UnlinkEntity(This : in out World; E : EntityClassAcc) is
+      CurLink : LinkAcc;
+      Edited : Boolean := False;
+   begin
+      loop
+         declare
+            Curs : LinksList.Cursor := This.Links.First;
+         begin
+            while Curs /= LinksList.No_Element loop
+               CurLink := LinksList.Element(Curs);
+               if CurLink.A = E or CurLink.B = E then
+                  This.Links.Delete(Curs);
+                  FreeLink(CurLink);
+                  Edited := True;
+               end if;
+               exit when Edited;
+               Curs := LinksList.Next(Curs);
+            end loop;
+         end;
+         exit when not Edited;
+      end loop;
+   end UnlinkEntity;
 
    -- clear the world (deep free)
    procedure Free(This : in out World)
@@ -63,6 +111,7 @@ package body Worlds is
    begin
 
       while Curs /= EntsList.No_Element loop
+         This.UnlinkEntity(EntsList.Element(Curs));
          FreeEnt(EntsList.Element(Curs));
          Curs := EntsList.Next(Curs);
       end loop;
@@ -74,8 +123,10 @@ package body Worlds is
       end loop;
       This.Entities.Clear;
       This.Environments.Clear;
+      This.Links.Clear;
       FreeList(This.Entities);
       FreeList(This.Environments);
+      FreeList(This.Links);
    end Free;
 
    -- Gives the world a function to check if entities are valid or not
@@ -93,6 +144,7 @@ package body Worlds is
       Curs : EntsList.Cursor := This.Entities.Find(Ent);
    begin
       This.Entities.Delete(Curs);
+      This.UnlinkEntity(Ent);
       if Destroy then
          FreeEnt(Ent);
       end if;
