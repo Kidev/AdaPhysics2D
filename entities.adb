@@ -14,6 +14,13 @@ package body Entities is
       This.Gravity := Grav;
    end Initialize;
 
+   procedure ChangeMaterial(This : in out Entity'Class; NewMat : Material)
+   is
+   begin
+      This.Mat := NewMat;
+      This.ComputeMass;
+   end ChangeMaterial;
+
    procedure ApplyForce(This : in out Entity; Force : Vec2D)
    is
    begin

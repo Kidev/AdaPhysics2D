@@ -272,6 +272,26 @@ package body Collisions is
       return 0.0;
    end OverlapArea;
 
+   function IsInside(Pos : Vec2D; Ent : not null access Entity'Class) return Boolean
+   is
+   begin
+      if Ent.EntityType = EntRectangle then
+         declare
+            Rect : constant Rectangles.RectangleAcc := Rectangles.RectangleAcc(Ent);
+         begin
+            return Pos.x >= Rect.Coords.x and Pos.x <= Rect.Coords.x + Rect.Dim.x
+              and  Pos.y >= Rect.Coords.y and Pos.y <= Rect.Coords.y + Rect.Dim.y;
+         end;
+      elsif Ent.EntityType = EntCircle then
+         declare
+            Circ : constant Circles.CircleAcc := Circles.CircleAcc(Ent);
+         begin
+            return MagSq(Pos - Circ.Coords) <= Circ.Radius * Circ.Radius;
+         end;
+      end if;
+      return False;
+   end IsInside;
+
    -- A fast approximation of collision detection. Usefull for when precision is not important
    function CollideEx(A, B : access Entity'Class) return Boolean
    is

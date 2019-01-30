@@ -32,6 +32,9 @@ package Collisions is
    -- Ensures that objects do not sink in each other
    procedure PosCorrection(Col : in Collision);
 
+   -- Tells if Pos is inside Ent
+   function IsInside(Pos : Vec2D; Ent : not null access Entity'Class) return Boolean;
+
    -- Returns an approximation of the area of the overlap for this collision
    -- Used for Archimede's force
    function OverlapArea(Col : in Collision) return Float;

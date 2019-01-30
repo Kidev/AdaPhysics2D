@@ -8,6 +8,8 @@ package Worlds is
    package DoublyLinkedListEnts is new Ada.Containers.Doubly_Linked_Lists(EntityClassAcc);
    use DoublyLinkedListEnts;
 
+   type SearchModes is (SM_Entity, SM_Environment, SM_All);
+
    type ListAcc is access List;
 
    type EntCheckerAcc is access function(E : access Entity'Class) return Boolean;
@@ -47,6 +49,10 @@ package Worlds is
 
    -- Update the world of dt TODO make it work with the chained list
    -- procedure Step(This : in out World);
+
+   -- Returns the closest entity to Pos in this world
+   -- If SearchMode = SM_All, searches first entities, then envs (ents are "on top")
+   function GetClosest(This : in out World; Pos : Vec2D; SearchMode : SearchModes := SM_All) return EntityClassAcc;
 
    -- Update the world of dt with low ram usage
    procedure StepLowRAM(This : in out World);

@@ -103,6 +103,27 @@ package body Worlds is
       return This.Entities;
    end GetEntities;
 
+   function GetClosest(This : in out World; Pos : Vec2D; SearchMode : SearchModes := SM_All) return EntityClassAcc
+   is
+      EntList : constant ListAcc := (if SearchMode = SM_All or SearchMode = SM_Entity
+                                     then This.Entities
+                                     else This.Environments);
+      Curs : Cursor := EntList.First;
+      Ent : EntityClassAcc;
+   begin
+      while Curs /= No_Element loop
+         Ent := Element(Curs);
+         if IsInside(Pos, Ent) then
+            return Ent;
+         end if;
+         Curs := Next(Curs);
+      end loop;
+      if SearchMode = SM_All then
+         return This.GetClosest(Pos, SM_Environment);
+      end if;
+      return null;
+   end GetClosest;
+
    function GetEnvironments(This : in out World) return ListAcc
    is
    begin

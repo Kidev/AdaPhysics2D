@@ -33,6 +33,9 @@ package Entities is
    -- Apply a force to the entity
    procedure ApplyForce(This : in out Entity; Force : Vec2D);
 
+   -- Update material
+   procedure ChangeMaterial(This : in out Entity'Class; NewMat : Material);
+
    procedure SetGravity(This : in out Entity; Grav : Vec2D);
 
    procedure SetLayer(This : in out Entity; Lay : Byte);
