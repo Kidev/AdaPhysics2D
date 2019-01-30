@@ -54,7 +54,7 @@ package Worlds is
 
    -- Remove entity from the world
    -- Entity is detroyed if Destroy is true
-   procedure RemoveEntity(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
+   procedure RemoveEntity(This : in out World; Ent : EntityClassAcc; Destroy : Boolean);
 
    -- Remove env from the world
    -- Entity is detroyed if Destroy is true
@@ -75,6 +75,9 @@ package Worlds is
 
    -- Get the list of envs
    function GetEnvironments(This : in out World) return EntsListAcc;
+
+   -- Get the list of links
+   function GetLinks(This : in out World) return LinksListAcc;
 
    -- Lets you set a maximum speed >= 0
    -- If max speed = 0 -> no max speed on that axis

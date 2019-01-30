@@ -24,7 +24,7 @@ package body Worlds is
    is
    begin
       This.MaxEntities := This.MaxEntities + Count;
-   end AddMaxEntities;
+   end IncreaseMaxEntities;
 
    -- Add entity to the world
    procedure AddEntity(This : in out World; Ent : not null access Entity'Class)
@@ -84,7 +84,9 @@ package body Worlds is
       Edited : Boolean := False;
    begin
       loop
+         Edited := False;
          declare
+            use LinksList;
             Curs : LinksList.Cursor := This.Links.First;
          begin
             while Curs /= LinksList.No_Element loop
@@ -105,8 +107,9 @@ package body Worlds is
    -- clear the world (deep free)
    procedure Free(This : in out World)
    is
-      use EntsList;
-      procedure FreeList is new Ada.Unchecked_Deallocation(EntsList.List, EntsListAcc);
+      use EntsList; use LinksList;
+      procedure FreeEntList is new Ada.Unchecked_Deallocation(EntsList.List, EntsListAcc);
+      procedure FreeLinkList is new Ada.Unchecked_Deallocation(LinksList.List, LinksListAcc);
       Curs : EntsList.Cursor := This.Entities.First;
    begin
 
@@ -124,9 +127,9 @@ package body Worlds is
       This.Entities.Clear;
       This.Environments.Clear;
       This.Links.Clear;
-      FreeList(This.Entities);
-      FreeList(This.Environments);
-      FreeList(This.Links);
+      FreeEntList(This.Entities);
+      FreeEntList(This.Environments);
+      FreeLinkList(This.Links);
    end Free;
 
    -- Gives the world a function to check if entities are valid or not
@@ -139,7 +142,7 @@ package body Worlds is
    end SetInvalidChecker;
 
    -- Remove entity from the world
-   procedure RemoveEntity(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
+   procedure RemoveEntity(This : in out World; Ent : EntityClassAcc; Destroy : Boolean)
    is
       Curs : EntsList.Cursor := This.Entities.Find(Ent);
    begin
@@ -194,6 +197,12 @@ package body Worlds is
    begin
       return This.Environments;
    end GetEnvironments;
+
+   function GetLinks(This : in out World) return LinksListAcc
+   is
+   begin
+      return This.Links;
+   end GetLinks;
 
    -- This procedure will perform Collision resolution
    -- in a way that doesnt require as much RAM as the Step
@@ -321,7 +330,7 @@ package body Worlds is
    begin
       if This.InvalidChecker /= null then
          declare
-            E : access Entity'Class;
+            E : EntityClassAcc;
             Edited : Boolean := False;
          begin
             loop

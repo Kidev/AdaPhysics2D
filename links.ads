@@ -3,6 +3,7 @@ with Entities; use Entities;
 package Links is
 
    type LinkTypes is (LTRope, LTSpring);
+   type LinkTypesFactorsArr is array (LinkTypes) of Float;
    type Link is record
       A, B : EntityClassAcc;
       Factor : Float;
@@ -10,7 +11,7 @@ package Links is
    pragma Pack(Link);
    type LinkAcc is access Link;
 
-   LinkTypesFactors : array (LinkTypes) of Float :=
+   LinkTypesFactors : LinkTypesFactorsArr :=
      (LTRope => 1.0,
       LTSpring => 0.5);
    
