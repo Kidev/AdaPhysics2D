@@ -11,7 +11,7 @@ package Materials is
       Restitution : Float; -- tension of surface for water ? TODO investigate
       StaticFriction : Float; -- on itself
       DynamicFriction : Float; -- on itself
-      Viscosity : Float; -- only for non solid
+      Viscosity : Float; -- only for non solid, ignored otherwise
    end record;
    pragma Pack (Material);
    

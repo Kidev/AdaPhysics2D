@@ -12,7 +12,7 @@ package Links is
    type LinkAcc is access Link;
 
    LinkTypesFactors : LinkTypesFactorsArr :=
-     (LTRope => 10000.0,
+     (LTRope => 100000.0,
       LTSpring => 500.0);
    
    function CreateLink(A, B : EntityClassAcc; Factor : Float) return LinkAcc;
