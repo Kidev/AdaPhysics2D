@@ -117,11 +117,19 @@ package body Worlds is
       use EntsList; use LinksList;
       procedure FreeEntList is new Ada.Unchecked_Deallocation(EntsList.List, EntsListAcc);
       procedure FreeLinkList is new Ada.Unchecked_Deallocation(LinksList.List, LinksListAcc);
+      procedure FreeColsList is new Ada.Unchecked_Deallocation(ColsList.List, ColsListAcc);
       Curs : EntsList.Cursor := This.Entities.First;
+      CursL : LinksList.Cursor := This.Links.First;
+      TmpLink : LinkAcc;
    begin
 
+      while CursL /= LinksList.No_Element loop
+         TmpLink := LinksList.Element(CursL);
+         FreeLink(TmpLink);
+         CursL := LinksList.Next(CursL);
+      end loop;
+
       while Curs /= EntsList.No_Element loop
-         This.UnlinkEntity(EntsList.Element(Curs));
          FreeEnt(EntsList.Element(Curs));
          Curs := EntsList.Next(Curs);
       end loop;
@@ -131,12 +139,16 @@ package body Worlds is
          FreeEnt(EntsList.Element(Curs));
          Curs := EntsList.Next(Curs);
       end loop;
+
       This.Entities.Clear;
       This.Environments.Clear;
       This.Links.Clear;
+      This.Cols.Clear;
+
       FreeEntList(This.Entities);
       FreeEntList(This.Environments);
       FreeLinkList(This.Links);
+      FreeColsList(This.Cols);
    end Free;
 
    -- Gives the world a function to check if entities are valid or not

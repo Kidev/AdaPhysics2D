@@ -18,13 +18,21 @@ package Worlds is
    type EntCheckerAcc is access function(E : EntityClassAcc) return Boolean;
 
    type World is tagged record
+      -- Access to accesses to the entities
       Entities : EntsListAcc;
+      -- Access to accesses to the environments entities
       Environments : EntsListAcc;
+      -- Access to accesses to the links
       Links : LinksListAcc;
+      -- Access to collisions (note this is different from the 3 above)
       Cols : ColsListAcc;
+      -- Entities.len + Environments.len + Links.len < MaxEntities
       MaxEntities : Natural;
+      -- Timestep
       dt : Float;
+      -- Function called when World checks the validity of its entities
       InvalidChecker : EntCheckerAcc;
+      -- Max speed of entities
       MaxSpeed : Vec2D;
    end record;
    pragma Pack (World);
