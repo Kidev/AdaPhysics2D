@@ -15,12 +15,12 @@ package body Circles is
    end Initialize;
 
    -- Create a new Circle
-   function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return CircleAcc
+   function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return EntityClassAcc
    is
-      TmpAcc : CircleAcc;
+      TmpAcc : EntityClassAcc;
    begin
       TmpAcc := new Circle;
-      Initialize(TmpAcc, Pos, Vel, Grav, Rad, Mat);
+      Initialize(CircleAcc(TmpAcc), Pos, Vel, Grav, Rad, Mat);
       return TmpAcc;
    end Create;
 

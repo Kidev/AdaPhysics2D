@@ -1,4 +1,4 @@
-with Entities;
+with Entities; use Entities;
 with Materials; use Materials;
 with Vectors2D; use Vectors2D;
 
@@ -12,7 +12,7 @@ package Rectangles is
    type RectangleAcc is access all Rectangle;
 
    -- Create a new Rectangle
-   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return RectangleAcc;
+   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return EntityClassAcc;
    
    function GetWidth(This : in Rectangle) return Float;
    function GetHeight(This : in Rectangle) return Float;

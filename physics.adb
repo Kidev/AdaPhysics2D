@@ -14,7 +14,7 @@ package body Physics is
    procedure StepLowRAM(This : in out World)
    is
       use EntsList;
-      A, B : access Entity'Class;
+      A, B : EntityClassAcc;
       C1, C2 : EntsList.Cursor;
       Col : Collision;
    begin
@@ -68,7 +68,7 @@ package body Physics is
    is
       use EntsList;
       use ColsList;
-      A, B : access Entity'Class;
+      A, B : EntityClassAcc;
       Col : Collision;
       C1, C2 : EntsList.Cursor;
       C : ColsList.Cursor;
@@ -132,18 +132,18 @@ package body Physics is
 
    end StepNormal;
    
-   procedure ResetForces(Ent : not null access Entity'Class)
+   procedure ResetForces(Ent : not null EntityClassAcc)
    is
    begin
       Ent.Force := Vec2D'(x => 0.0, y => 0.0);
    end ResetForces;
 
-   function Archimedes(This : in out World; That : access Entity'Class) return Float
+   function Archimedes(This : in out World; That : not null EntityClassAcc) return Float
    is
       use EntsList;
       TotalCoef : Float := 0.0; -- >= 0.0
       Curs : EntsList.Cursor := This.Environments.First;
-      Env : access Entity'Class;
+      Env : EntityClassAcc;
       Col : Collision;
    begin
       while Curs /= EntsList.No_Element loop
@@ -159,7 +159,7 @@ package body Physics is
    -- This computes the fluid friction between That and the env That is in (in This)
    -- It should depend of the shape and speed of That
    -- It returns a positive force that will oppose the movement in the end
-   function FluidFriction(This : in out World; That : access Entity'Class) return Vec2D
+   function FluidFriction(This : in out World; That : not null EntityClassAcc) return Vec2D
    is
       QuadraticLimit : constant Float := 5.0;
    begin
@@ -178,7 +178,7 @@ package body Physics is
          if MagSq(That.Velocity) >= QuadraticLimit * QuadraticLimit then
             declare
 
-               function GetCx(Ent : access Entity'Class) return Float is
+               function GetCx(Ent : not null EntityClassAcc) return Float is
                begin
                   case Ent.EntityType is
                      when EntCircle => return 0.47;
@@ -186,7 +186,7 @@ package body Physics is
                   end case;
                end GetCx;
 
-               function GetS(Ent : access Entity'Class) return Float is
+               function GetS(Ent : not null EntityClassAcc) return Float is
                begin
                   case Ent.EntityType is
                      when EntCircle =>
@@ -205,7 +205,7 @@ package body Physics is
          end if;
          declare
 
-            function GetK(Ent : access Entity'Class) return Float is
+            function GetK(Ent : not null EntityClassAcc) return Float is
             begin
                case Ent.EntityType is
                   when EntCircle =>
@@ -223,12 +223,12 @@ package body Physics is
       end;
    end FluidFriction;
 
-   function Tension(This : in out World; Ent : access Entity'Class) return Vec2D
+   function Tension(This : in out World; Ent : not null EntityClassAcc) return Vec2D
    is
       use LinksList;
       TotalForce : Vec2D := (0.0, 0.0);
       Curs : LinksList.Cursor := This.Links.First;
-      Target : access Entity'Class;
+      Target : EntityClassAcc;
       CurLink : LinkAcc;
       TmpDistance : Float := 0.0;
       AddForce : Vec2D;
@@ -261,7 +261,7 @@ package body Physics is
    -- dv = (dt/m) * SF;
    -- v = v + dv [on dt, Euler's integration method]
    -- v = v + (dt * SF)/m;
-   procedure IntegrateForces(This : in out World; Ent : not null access Entity'Class)
+   procedure IntegrateForces(This : in out World; Ent : not null EntityClassAcc)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
@@ -278,7 +278,7 @@ package body Physics is
       end if;
    end IntegrateForces;
 
-   procedure IntegrateVelocity(This : in out World; Ent : not null access Entity'Class)
+   procedure IntegrateVelocity(This : in out World; Ent : not null EntityClassAcc)
    is
    begin
       if Ent.all.InvMass /= 0.0 then
@@ -287,12 +287,12 @@ package body Physics is
       end if;
    end IntegrateVelocity;
    
-   function GetDensestMaterial(This : in out World; That : access Entity'Class) return Material
+   function GetDensestMaterial(This : in out World; That : not null EntityClassAcc) return Material
    is
       use EntsList;
       ReturnMat : Material := VACUUM;
       Curs : EntsList.Cursor := This.Environments.First;
-      Env : access Entity'Class;
+      Env : EntityClassAcc;
       Col : Collision; -- TODO create a collide without all the normal / penetration stuff to optimize
    begin
 

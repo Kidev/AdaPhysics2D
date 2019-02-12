@@ -9,8 +9,8 @@ package Collisions is
    -- Collision type, holding meaningful information
    -- about a collision
    type Collision is record
-      A : access Entity'Class;
-      B : access Entity'Class;
+      A : EntityClassAcc;
+      B : EntityClassAcc;
       Normal : Vec2D;
       Penetration : Float;
    end record;
@@ -21,11 +21,11 @@ package Collisions is
 
    -- Return True if A collides with B; else false
    -- Fills Col with data about the collision
-   function Collide(A, B : not null access Entity'Class; Col : out Collision)
+   function Collide(A, B : not null EntityClassAcc; Col : out Collision)
                     return Boolean;
 
    -- A fast approximation of collision detection. Usefull for when precision is not important
-   function CollideEx(A, B : access Entity'Class) return Boolean;
+   function CollideEx(A, B : not null EntityClassAcc) return Boolean;
 
    -- This procedure is called when there is a collision
    -- It impulses on A and B so that they no longer collide
@@ -37,7 +37,7 @@ package Collisions is
    procedure PosCorrection(Col : in Collision);
 
    -- Tells if Pos is inside Ent
-   function IsInside(Pos : Vec2D; Ent : not null access Entity'Class) return Boolean;
+   function IsInside(Pos : Vec2D; Ent : not null EntityClassAcc) return Boolean;
 
    -- Returns an approximation of the area of the overlap for this collision
    -- Used for Archimede's force

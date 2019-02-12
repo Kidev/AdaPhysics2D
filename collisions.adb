@@ -1,6 +1,6 @@
 package body Collisions is
 
-   function Collide(A, B : not null access Entity'Class; Col : out Collision) return Boolean
+   function Collide(A, B : not null EntityClassAcc; Col : out Collision) return Boolean
    is
    begin
 
@@ -93,7 +93,7 @@ package body Collisions is
    function CircleOnRectangle(Col : in out Collision) return Boolean
    is
       Result : Boolean;
-      Temp : access Entity'Class;
+      Temp : EntityClassAcc;
    begin
       Temp := Col.A;
       Col.A := Col.B;
@@ -162,8 +162,8 @@ package body Collisions is
       FinRestitution : Float;
       ImpulseScalar : Float;
       Impulse : Vec2D;
-      A : constant access Entity'Class := Col.A;
-      B : constant access Entity'Class := Col.B;
+      A : constant EntityClassAcc := Col.A;
+      B : constant EntityClassAcc := Col.B;
    begin
 
       -- Ignore collision between static objects
@@ -228,8 +228,8 @@ package body Collisions is
       Slop : constant Float := 0.01;
       Correction : Vec2D;
       ScCo : Float;
-      A : constant access Entity'Class := Col.A;
-      B : constant access Entity'Class := Col.B;
+      A : constant EntityClassAcc := Col.A;
+      B : constant EntityClassAcc := Col.B;
    begin
       if A.InvMass + B.InvMass /= 0.0 then
          ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
@@ -263,7 +263,7 @@ package body Collisions is
       return 0.0;
    end OverlapArea;
 
-   function IsInside(Pos : Vec2D; Ent : not null access Entity'Class) return Boolean
+   function IsInside(Pos : Vec2D; Ent : not null EntityClassAcc) return Boolean
    is
    begin
       if Ent.EntityType = EntRectangle then
@@ -284,7 +284,7 @@ package body Collisions is
    end IsInside;
 
    -- A fast approximation of collision detection. Usefull for when precision is not important
-   function CollideEx(A, B : access Entity'Class) return Boolean
+   function CollideEx(A, B : not null EntityClassAcc) return Boolean
    is
       Col : constant Collision := (A, B, (0.0, 0.0), 0.0);
    begin

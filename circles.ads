@@ -1,4 +1,4 @@
-with Entities;
+with Entities; use Entities;
 with Materials; use Materials;
 with Vectors2D; use Vectors2D;
 
@@ -12,7 +12,7 @@ package Circles is
    type CircleAcc is access all Circle;
 
    -- Create a new Circle
-   function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return CircleAcc;
+   function Create(Pos, Vel, Grav : in Vec2D; Rad : in Float; Mat : in Material) return EntityClassAcc;
 
    overriding
    function GetPosition(This : in Circle) return Vec2D;

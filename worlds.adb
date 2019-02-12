@@ -34,7 +34,7 @@ package body Worlds is
    end Step;
 
    -- Add entity to the world
-   procedure AddEntity(This : in out World; Ent : not null access Entity'Class)
+   procedure AddEntity(This : in out World; Ent : not null EntityClassAcc)
    is
    begin
       if This.MaxEntities = 0
@@ -52,7 +52,7 @@ package body Worlds is
    end SetMaxSpeed;
 
    -- Add env to the world
-   procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class)
+   procedure AddEnvironment(This : in out World; Ent : not null EntityClassAcc)
    is
    begin
       if This.MaxEntities = 0
@@ -161,7 +161,7 @@ package body Worlds is
    end RemoveEntity;
 
    -- Remove entity from the world
-   procedure RemoveEnvironment(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean)
+   procedure RemoveEnvironment(This : in out World; Ent : not null EntityClassAcc; Destroy : Boolean)
    is
       Curs : EntsList.Cursor := This.Environments.Find(Ent);
    begin

@@ -14,12 +14,12 @@ package body Rectangles is
    end Initialize;
 
    -- Create a new Rectangle
-   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return RectangleAcc
+   function Create(Pos, Vel, Grav, Dim : in Vec2D; Mat : in Material) return EntityClassAcc
    is
-      TmpAcc : RectangleAcc;
+      TmpAcc : EntityClassAcc;
    begin
       TmpAcc := new Rectangle;
-      Initialize(TmpAcc, Pos, Vel, Grav, Dim, Mat);
+      Initialize(RectangleAcc(TmpAcc), Pos, Vel, Grav, Dim, Mat);
       return TmpAcc;
    end Create;
    

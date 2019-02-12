@@ -15,7 +15,7 @@ package Worlds is
    type SearchModes is (SM_Entity, SM_Environment, SM_All);
    type StepModes is (Step_Normal, Step_LowRAM);
 
-   type EntCheckerAcc is access function(E : access Entity'Class) return Boolean;
+   type EntCheckerAcc is access function(E : EntityClassAcc) return Boolean;
 
    type World is tagged record
       Entities : EntsListAcc;
@@ -38,10 +38,10 @@ package Worlds is
    procedure Free(This : in out World);
 
    -- Add entity to the world
-   procedure AddEntity(This : in out World; Ent : not null access Entity'Class);
+   procedure AddEntity(This : in out World; Ent : not null EntityClassAcc);
 
    -- Add env to the world
-   procedure AddEnvironment(This : in out World; Ent : not null access Entity'Class);
+   procedure AddEnvironment(This : in out World; Ent : not null EntityClassAcc);
 
    -- Add a link between two entities (rope, spring...)
    procedure LinkEntities(This : in out World; A, B : EntityClassAcc; Factor : Float);
@@ -62,7 +62,7 @@ package Worlds is
 
    -- Remove env from the world
    -- Entity is detroyed if Destroy is true
-   procedure RemoveEnvironment(This : in out World; Ent : not null access Entity'Class; Destroy : Boolean);
+   procedure RemoveEnvironment(This : in out World; Ent : not null EntityClassAcc; Destroy : Boolean);
 
    -- Returns the entity in which Pos is
    -- If SearchMode = SM_All, searches first entities, then envs (ents are "on top")
