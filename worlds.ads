@@ -2,6 +2,7 @@ with Entities; use Entities;
 with Vectors2D; use Vectors2D;
 with Ada.Containers.Doubly_Linked_Lists;
 with Links; use Links;
+with Collisions; use Collisions;
 
 package Worlds is
 
@@ -12,6 +13,7 @@ package Worlds is
    type LinksListAcc is access LinksList.List;
 
    type SearchModes is (SM_Entity, SM_Environment, SM_All);
+   type StepModes is (Step_Normal, Step_LowRAM);
 
    type EntCheckerAcc is access function(E : access Entity'Class) return Boolean;
 
@@ -19,6 +21,7 @@ package Worlds is
       Entities : EntsListAcc;
       Environments : EntsListAcc;
       Links : LinksListAcc;
+      Cols : ColsListAcc;
       MaxEntities : Natural;
       dt : Float;
       InvalidChecker : EntCheckerAcc;
@@ -29,7 +32,7 @@ package Worlds is
    -- init world
    procedure Init(This : in out World; dt : in Float; MaxEnts : Natural := 32);
 
-   procedure Step(This : in out World; Accuracy : Natural := 1);
+   procedure Step(This : in out World; Mode : StepModes := Step_Normal);
 
    -- clear the world (deep free)
    procedure Free(This : in out World);

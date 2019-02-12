@@ -1,5 +1,6 @@
 with Entities; use Entities;
 with Vectors2D; use Vectors2D;
+with Ada.Containers.Doubly_Linked_Lists;
 with Circles;
 with Rectangles;
 
@@ -7,13 +8,16 @@ package Collisions is
 
    -- Collision type, holding meaningful information
    -- about a collision
-   type Collision is limited record
+   type Collision is record
       A : access Entity'Class;
       B : access Entity'Class;
       Normal : Vec2D;
       Penetration : Float;
    end record;
    pragma Pack (Collision);
+
+   package ColsList is new Ada.Containers.Doubly_Linked_Lists(Collision);
+   type ColsListAcc is access ColsList.List;
 
    -- Return True if A collides with B; else false
    -- Fills Col with data about the collision
@@ -56,5 +60,13 @@ private
    function OverlapAreaCircleCircle(A, B : Circles.CircleAcc) return Float;
 
    function OverlapAreaRectangleRectangle(PosA, DimA, PosB, DimB : Vec2D) return Float;
+
+   type CollideFunc is access function (Col : in out Collision) return Boolean;
+   type DispatcherArr is array (EntityTypes, EntityTypes) of CollideFunc;
+   Dispatcher : constant DispatcherArr :=
+     (EntCircle => (EntCircle => CircleOnCircle'Access,
+                    EntRectangle => CircleOnRectangle'Access),
+      EntRectangle => (EntCircle => RectangleOnCircle'Access,
+                       EntRectangle => RectangleOnRectangle'Access));
 
 end Collisions;

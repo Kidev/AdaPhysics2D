@@ -9,7 +9,7 @@ package Links is
       Factor, RestLen : Float;
    end record;
    pragma Pack(Link);
-   type LinkAcc is access Link;
+   type LinkAcc is access all Link;
 
    LinkTypesFactors : LinkTypesFactorsArr :=
      (LTRope => 100000.0,

@@ -5,10 +5,8 @@ with Materials; use Materials;
 
 package Physics is
    
-   -- Update the world of dt TODO make it work with the chained list
-   -- Accuracy > 1 means each step of dt will be composed of Accuracy passes
-   -- This means each dt will be computed using a mean value of Accuracy values
-   procedure StepNormal(This : in out World; Accuracy : Positive);
+   -- Update the world of dt
+   procedure StepNormal(This : in out World);
 
    -- Update the world of dt with low ram usage
    procedure StepLowRAM(This : in out World);

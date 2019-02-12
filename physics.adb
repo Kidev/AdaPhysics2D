@@ -7,10 +7,10 @@ with Links; use Links;
 package body Physics is
 
    -- This procedure will perform Collision resolution
-   -- in a way that doesnt require as much RAM as the Step
+   -- in a way that doesnt require as much RAM as the StepNormal
    -- one: it will not store all collisions and then resolve
    -- them. Instead, it will resolve them one at a time
-   -- The result might be less realistic, but more efficient
+   -- The result might be less realistic, but more space efficient
    procedure StepLowRAM(This : in out World)
    is
       use EntsList;
@@ -59,73 +59,76 @@ package body Physics is
 
    end StepLowRAM;
 
-   -- TODO redo the RAM heavy step procedure
    -- Update the world of dt
-   procedure StepNormal(This : in out World; Accuracy : Positive)
+   -- This procedure is "RAM heavy", as it stores every collision inside
+   -- the passed World between two calls of Step
+   -- If RAM usage is an issue, use StepLowRAM instead
+   -- Note that it will only be an issue for embedded software
+   procedure StepNormal(This : in out World)
    is
       use EntsList;
-      Cols : EntsList.List;
-      Col : access Collision;
+      use ColsList;
       A, B : access Entity'Class;
+      Col : Collision;
       C1, C2 : EntsList.Cursor;
-      Count : Positive := Accuracy;
+      C : ColsList.Cursor;
    begin
       
-      StepLowRAM(This);
+      This.Cols.Clear;
 
---        -- Broad phase
---        C1 := This.Entities.First;
---        while C1 /= EntsList.No_Element loop
---           A := EntsList.Element(C1);
---           C2 := EntsList.Next(C1);
---           while C2 /= EntsList.No_Element loop
---              B := EntsList.Element(C2);
---              -- Narrow phase
---              Col := new Collision;
---              if (A.all.Layer and B.all.Layer) /= 2#00000000#
---                and then Collide(A, B, Col.all) then
---                 Resolve(Col.all);
---                 PosCorrection(Col.all);
---              end if;
---              C2 := EntsList.Next(C2);
---           end loop;
---           C1 := EntsList.Next(C1);
---        end loop;
---  
---        -- Broad phase
---  --        for I in 1 .. This.Index loop
---  --           A := This.Entities(I);
---  --           for J in I .. This.Index loop
---  --              B := This.Entities(J);
---  --              -- Narrow phase
---  --              if A /= B and then (A.all.Layer and B.all.Layer) /= 2#00000000#
---  --                and then Collide(A, B, Cols(Count)) then
---  --                 Count := Count + 1;
---  --              end if;
---  --           end loop;
---  --        end loop;
---  
---        for I in 1 .. This.Index loop
---           IntegrateForces(This, This.Entities(I));
---        end loop;
---  
---        for I in 0 .. Count - 1 loop
---           Resolve(Cols(I));
---        end loop;
---  
---        for I in 1 .. This.Index loop
---           IntegrateVelocity(This, This.Entities(I));
---        end loop;
---  
---        for I in 0 .. Count - 1 loop
---           PosCorrection(Cols(I));
---        end loop;
---  
---        for I in 1 .. This.Index loop
---           ResetForces(This.Entities(I));
---        end loop;
---  
---        This.CheckEntities;
+      -- Broad phase
+      C1 := This.Entities.First;
+      while C1 /= EntsList.No_Element loop
+         A := EntsList.Element(C1);
+         C2 := EntsList.Next(C1);
+         while C2 /= EntsList.No_Element loop
+            B := EntsList.Element(C2);
+            -- Narrow phase
+            if (A.all.Layer and B.all.Layer) /= 2#00000000#
+              and then Collide(A, B, Col) then
+               This.Cols.Append(Col);
+            end if;
+            C2 := EntsList.Next(C2);
+         end loop;
+         C1 := EntsList.Next(C1);
+      end loop;
+
+      -- Integrate forces
+      C1 := This.Entities.First;
+      while C1 /= EntsList.No_Element loop
+         IntegrateForces(This, EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
+      end loop;
+
+      -- Resolves collisions
+      C := This.Cols.First;
+      while C /= ColsList.No_Element loop
+         Resolve(ColsList.Element(C));
+         C := ColsList.Next(C);
+      end loop;
+
+      -- Integrate velocities
+      C1 := This.Entities.First;
+      while C1 /= EntsList.No_Element loop
+         IntegrateVelocity(This, EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
+      end loop;
+
+      -- Little positional correction to prevent jitter
+      C := This.Cols.First;
+      while C /= ColsList.No_Element loop
+         PosCorrection(ColsList.Element(C));
+         C := ColsList.Next(C);
+      end loop;
+
+      -- Reset all forces
+      C1 := This.Entities.First;
+      while C1 /= EntsList.No_Element loop
+         ResetForces(EntsList.Element(C1));
+         C1 := EntsList.Next(C1);
+      end loop;
+
+      This.CheckEntities;
 
    end StepNormal;
    
@@ -280,7 +283,7 @@ package body Physics is
    begin
       if Ent.all.InvMass /= 0.0 then
          Ent.all.Coords := Ent.all.Coords + (Ent.all.Velocity * This.dt);
-         IntegrateForces(This, Ent);
+         IntegrateForces(This, Ent); -- TODO reconsider the purpose of this call (smoothes the step?)
       end if;
    end IntegrateVelocity;
    

@@ -1,15 +1,7 @@
 package body Collisions is
 
-   function Collide(A, B : not null access Entity'Class; Col : out Collision)
-   return Boolean
+   function Collide(A, B : not null access Entity'Class; Col : out Collision) return Boolean
    is
-      type CollideFunc is access function (Col : in out Collision) return Boolean;
-      type DispatcherArr is array (EntityTypes, EntityTypes) of CollideFunc;
-      Dispatcher : constant DispatcherArr :=
-        (EntCircle => (EntCircle => CircleOnCircle'Access,
-                       EntRectangle => CircleOnRectangle'Access),
-         EntRectangle => (EntCircle => RectangleOnCircle'Access,
-                          EntRectangle => RectangleOnRectangle'Access));
    begin
 
       Col.A := A; Col.B := B;
@@ -175,15 +167,12 @@ package body Collisions is
    begin
 
       -- Ignore collision between static objects
-      if A.InvMass = 0.0 and B.InvMass = 0.0 then
+      if A.InvMass + B.InvMass = 0.0 then
          A.Velocity := Vec2D'(0.0, 0.0);
          B.Velocity := Vec2D'(0.0, 0.0);
          return;
       end if;
 
-      -- /!\ If objects are immobile relative to each other
-      -- /!\ This may cause problems in 0g
-      -- /!\ A fix might be to add 0.01 in this case
       RelVel := B.Velocity - A.Velocity;
       VelNormal := RelVel * Col.Normal;
 
@@ -242,11 +231,13 @@ package body Collisions is
       A : constant access Entity'Class := Col.A;
       B : constant access Entity'Class := Col.B;
    begin
-      ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
-      Correction := ScCo * PosPerCorrection * Col.Normal;
+      if A.InvMass + B.InvMass /= 0.0 then
+         ScCo := Float'Max(Col.Penetration - Slop, 0.0) / (A.InvMass + B.InvMass);
+         Correction := ScCo * PosPerCorrection * Col.Normal;
 
-      A.Velocity := A.Velocity - (A.InvMass * Correction);
-      B.Velocity := B.Velocity + (B.InvMass * Correction);
+         A.Velocity := A.Velocity - (A.InvMass * Correction);
+         B.Velocity := B.Velocity + (B.InvMass * Correction);
+      end if;
    end PosCorrection;
 
    -- for rectangle / rectangle it is accurate

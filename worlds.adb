@@ -1,4 +1,3 @@
-with Collisions; use Collisions;
 with Ada.Unchecked_Deallocation;
 with Physics; use Physics;
 
@@ -13,6 +12,7 @@ package body Worlds is
       This.Entities := new EntsList.List;
       This.Environments := new EntsList.List;
       This.Links := new LinksList.List;
+      This.Cols := new ColsList.List;
       This.InvalidChecker := null;
       This.MaxSpeed := (0.0, 0.0);
    end Init;
@@ -23,13 +23,13 @@ package body Worlds is
       This.MaxEntities := This.MaxEntities + Count;
    end IncreaseMaxEntities;
 
-   procedure Step(This : in out World; Accuracy : Natural := 1)
+   procedure Step(This : in out World; Mode : StepModes := Step_Normal)
    is
    begin
-      if Accuracy = 0 then
+      if Mode = Step_LowRAM then
          StepLowRAM(This);
       else
-         StepNormal(This, Accuracy);
+         StepNormal(This);
       end if;
    end Step;
 
