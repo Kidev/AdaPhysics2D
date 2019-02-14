@@ -1,20 +1,27 @@
 with Ada.Unchecked_Deallocation;
 with Physics; use Physics;
+with Materials;
+with Circles;
 
 package body Worlds is
 
    -- init world
    procedure Init(This : in out World; dt : in Float; MaxEnts : Natural := 32)
    is
+      VecZero : constant Vec2D := (0.0, 0.0);
    begin
       This.MaxEntities := MaxEnts;
       This.dt := dt;
+      This.Invdt := 1.0 / dt;
       This.Entities := new EntsList.List;
       This.Environments := new EntsList.List;
       This.Links := new LinksList.List;
       This.Cols := new ColsList.List;
       This.InvalidChecker := null;
-      This.MaxSpeed := (0.0, 0.0);
+      This.MaxSpeed := VecZero;
+      This.StaticEnt :=
+        Circles.Create(VecZero, VecZero, VecZero, 1.0,
+                       Materials.STATIC.SetFriction.SetRestitution(LinkTypesFactors(LTRope)));
    end Init;
 
    procedure IncreaseMaxEntities(This : in out World; Count : Positive)
@@ -64,25 +71,14 @@ package body Worlds is
       end if;
    end AddEnvironment;
 
-   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; Factor : Float) is
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes; Factor : Float := 0.0) is
    begin
       if This.MaxEntities = 0
         or else Integer(This.Entities.Length)
               + Integer(This.Environments.Length)
               + Integer(This.Links.Length) < This.MaxEntities
       then
-         This.Links.Append(CreateLink(A, B, Factor));
-      end if;
-   end LinkEntities;
-
-   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes) is
-   begin
-      if This.MaxEntities = 0
-        or else Integer(This.Entities.Length)
-              + Integer(This.Environments.Length)
-              + Integer(This.Links.Length) < This.MaxEntities
-      then
-         This.Links.Append(CreateLink(A, B, LinkType));
+         This.Links.Append(CreateLink(A, B, LinkType, Factor));
       end if;
    end LinkEntities;
 
@@ -139,6 +135,8 @@ package body Worlds is
          FreeEnt(EntsList.Element(Curs));
          Curs := EntsList.Next(Curs);
       end loop;
+
+      FreeEnt(This.StaticEnt);
 
       This.Entities.Clear;
       This.Environments.Clear;

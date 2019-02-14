@@ -15,6 +15,15 @@ package body Materials is
       return That;
    end SetFriction;
 
+   -- Allows you to change restitution for a material
+   -- Disables it by default
+   function SetRestitution(This : Material; Rest : Float := 0.0) return Material is
+      That : Material := This;
+   begin
+      That.Restitution := Rest;
+      return That;
+   end SetRestitution;
+
    function IsSolidMaterial(This : Material) return Boolean is
    begin
       return (MaterialType'Pos(This.MType) < MaterialType'Pos(ETVacuum));

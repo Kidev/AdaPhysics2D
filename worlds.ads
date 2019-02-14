@@ -30,10 +30,15 @@ package Worlds is
       MaxEntities : Natural;
       -- Timestep
       dt : Float;
+      -- Inverse timestep
+      Invdt : Float;
       -- Function called when World checks the validity of its entities
       InvalidChecker : EntCheckerAcc;
-      -- Max speed of entities
-      MaxSpeed : Vec2D;
+      -- Max speed of entities, 0.0 to disable on an axis
+      MaxSpeed : Vec2D := (0.0, 0.0);
+      -- Default static entity, useful for faking collisions
+      -- Its restitution is LinkTypesFactors(LTRope)
+      StaticEnt : EntityClassAcc := null;
    end record;
    pragma Pack (World);
 
@@ -52,8 +57,7 @@ package Worlds is
    procedure AddEnvironment(This : in out World; Ent : not null EntityClassAcc);
 
    -- Add a link between two entities (rope, spring...)
-   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; Factor : Float);
-   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes);
+   procedure LinkEntities(This : in out World; A, B : EntityClassAcc; LinkType : LinkTypes; Factor : Float := 0.0);
 
    -- Remove all links tied to the passed entity
    procedure UnlinkEntity(This : in out World; E : EntityClassAcc);

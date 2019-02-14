@@ -14,11 +14,18 @@ package body Physics is
    procedure StepLowRAM(This : in out World)
    is
       use EntsList;
+      use LinksList;
       A, B : EntityClassAcc;
       C1, C2 : EntsList.Cursor;
       Col : Collision;
+      LC : LinksList.Cursor;
+      CurLink : LinkAcc;
+      LinkDistance : Float;
+      NormalAB : Vec2D;
+      Penetration : Float;
    begin
 
+      -- Integrate forces
       C1 := This.Entities.First;
       while C1 /= EntsList.No_Element loop
          IntegrateForces(This, EntsList.Element(C1));
@@ -42,13 +49,39 @@ package body Physics is
          end loop;
          C1 := EntsList.Next(C1);
       end loop;
+      
+      -- Fake collisions for pull force of ropes
+      LC := This.Links.First;
+      while LC /= LinksList.No_Element loop
+         CurLink := LinksList.Element(LC);
+         A := CurLink.A;
+         B := CurLink.B;
+         LinkDistance := GetDistance(A.all, B.all);
+         Penetration := LinkDistance - CurLink.RestLen;
+         if Penetration > 0.0 then
+            NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
+            if A.InvMass /= 0.0 then
+               Col := (A, This.StaticEnt, -NormalAB, Penetration);
+               Resolve(Col);
+               PosCorrection(Col);
+            end if;
+            if B.InvMass /= 0.0 then
+               Col := (B, This.StaticEnt, NormalAB, Penetration);
+               Resolve(Col);
+               PosCorrection(Col);
+            end if;
+         end if;
+         LC := LinksList.Next(LC);
+      end loop;
 
+      -- Integrate velocities
       C1 := This.Entities.First;
       while C1 /= EntsList.No_Element loop
          IntegrateVelocity(This, EntsList.Element(C1));
          C1 := EntsList.Next(C1);
       end loop;
 
+      -- Reset all forces
       C1 := This.Entities.First;
       while C1 /= EntsList.No_Element loop
          ResetForces(EntsList.Element(C1));
@@ -68,10 +101,16 @@ package body Physics is
    is
       use EntsList;
       use ColsList;
+      use LinksList;
       A, B : EntityClassAcc;
       Col : Collision;
       C1, C2 : EntsList.Cursor;
       C : ColsList.Cursor;
+      LC : LinksList.Cursor;
+      CurLink : LinkAcc;
+      LinkDistance : Float;
+      NormalAB : Vec2D;
+      Penetration : Float;
    begin
       
       This.Cols.Clear;
@@ -91,6 +130,28 @@ package body Physics is
             C2 := EntsList.Next(C2);
          end loop;
          C1 := EntsList.Next(C1);
+      end loop;
+      
+      -- Fake collisions for pull force of ropes
+      LC := This.Links.First;
+      while LC /= LinksList.No_Element loop
+         CurLink := LinksList.Element(LC);
+         A := CurLink.A;
+         B := CurLink.B;
+         LinkDistance := GetDistance(A.all, B.all);
+         Penetration := LinkDistance - CurLink.RestLen;
+         if Penetration > 0.0 then
+            NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
+            if A.InvMass /= 0.0 then
+               Col := (A, This.StaticEnt, -NormalAB, Penetration);
+               This.Cols.Append(Col);
+            end if;
+            if B.InvMass /= 0.0 then
+               Col := (B, This.StaticEnt, NormalAB, Penetration);
+               This.Cols.Append(Col);
+            end if;
+         end if;
+         LC := LinksList.Next(LC);
       end loop;
 
       -- Integrate forces
@@ -232,6 +293,8 @@ package body Physics is
       CurLink : LinkAcc;
       TmpDistance : Float := 0.0;
       AddForce : Vec2D;
+      X : Float;
+      NormalizedDir : Vec2D;
    begin
       while Curs /= LinksList.No_Element loop
          CurLink := LinksList.Element(Curs);
@@ -243,8 +306,13 @@ package body Physics is
          end if;
          if Target /= null then
             TmpDistance := GetDistance(Ent.all, Target.all);
-            AddForce := (CurLink.Factor * (TmpDistance - CurLink.RestLen)
-                         * (1.0 / TmpDistance) * (Target.GetPosition - Ent.GetPosition));
+            X := TmpDistance - CurLink.RestLen;
+            NormalizedDir := (1.0 / TmpDistance) * (Target.GetPosition - Ent.GetPosition);
+            -- Push force if rope, and Push & Pull forces if it is not rope
+            -- Pull force of rope is handled as a collision in Step with small elasticity when X >= 0.0
+            if CurLink.LinkType /= LTRope or X < 0.0 then
+               AddForce := (CurLink.Factor * X * NormalizedDir);
+            end if;
             TotalForce := TotalForce + AddForce;
          end if;
          Curs := LinksList.Next(Curs);
@@ -266,13 +334,16 @@ package body Physics is
    begin
       if Ent.all.InvMass /= 0.0 then
 	declare
-            SF : constant Vec2D :=
-              Ent.Force + Tension(This, Ent) - FluidFriction(This, Ent)
-              + ((Ent.Mass - Archimedes(This, Ent)) * Ent.Gravity);
-            SpeedAdded : constant Vec2D := (SF * This.dt * Ent.InvMass);
-	begin
+            Fext : Vec2D :=
+              Ent.Force - FluidFriction(This, Ent) + ((Ent.Mass - Archimedes(This, Ent)) * Ent.Gravity);
+            SpeedAdded : Vec2D;
+         begin
+            SpeedAdded := (Fext * This.dt * Ent.InvMass);
             Ent.all.Velocity := ClampVec(Ent.all.Velocity + SpeedAdded, This.MaxSpeed); -- Ent.all.Velocity + SpeedAdded
-	end;
+            Fext := Tension(This, Ent);
+            SpeedAdded := (Fext * This.dt * Ent.InvMass);
+            Ent.all.Velocity := ClampVec(Ent.all.Velocity + SpeedAdded, This.MaxSpeed);
+         end;
       else
          Ent.all.Velocity := (0.0, 0.0);
       end if;

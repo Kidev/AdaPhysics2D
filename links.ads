@@ -6,18 +6,17 @@ package Links is
    type LinkTypesFactorsArr is array (LinkTypes) of Float;
    type Link is record
       A, B : EntityClassAcc;
+      LinkType : LinkTypes;
       Factor, RestLen : Float;
    end record;
    pragma Pack(Link);
    type LinkAcc is access all Link;
 
    LinkTypesFactors : LinkTypesFactorsArr :=
-     (LTRope => 100000.0,
+     (LTRope => 0.5,
       LTSpring => 500.0);
    
-   function CreateLink(A, B : EntityClassAcc; Factor : Float) return LinkAcc;
-   
-   function CreateLink(A, B : EntityClassAcc; LinkType : LinkTypes) return LinkAcc;
+   function CreateLink(A, B : EntityClassAcc; LinkType : LinkTypes; Factor : Float := 0.0) return LinkAcc;
    
    procedure FreeLink(This : in out LinkAcc);
 

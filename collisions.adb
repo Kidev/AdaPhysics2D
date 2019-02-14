@@ -164,6 +164,7 @@ package body Collisions is
       Impulse : Vec2D;
       A : constant EntityClassAcc := Col.A;
       B : constant EntityClassAcc := Col.B;
+      MuS : Float;
    begin
 
       -- Ignore collision between static objects
@@ -189,31 +190,32 @@ package body Collisions is
          B.Velocity := B.Velocity + (B.InvMass * Impulse);
 
          -- Compute friction
-         declare
-            Tangent : Vec2D;
-            FrictionImpulse : Vec2D;
-            ImpulseScalarTan : Float;
-            MuS, MuC : Float;
-         begin
-            RelVel := B.Velocity - A.Velocity;
-            Tangent := RelVel - (RelVel * Col.Normal) * Col.Normal;
-            Tangent := Normalize(Tangent);
+         MuS := Friction(A.Mat.StaticFriction, B.Mat.StaticFriction);
+         if MuS /= 0.0 then
+            declare
+               Tangent : Vec2D;
+               FrictionImpulse : Vec2D;
+               ImpulseScalarTan : Float;
+               MuC : Float;
+            begin
+               RelVel := B.Velocity - A.Velocity;
+               Tangent := RelVel - (RelVel * Col.Normal) * Col.Normal;
+               Tangent := Normalize(Tangent);
 
-            ImpulseScalarTan := -(RelVel * Tangent);
-            ImpulseScalarTan := ImpulseScalarTan / (A.InvMass + B.InvMass);
+               ImpulseScalarTan := -(RelVel * Tangent);
+               ImpulseScalarTan := ImpulseScalarTan / (A.InvMass + B.InvMass);
 
-            MuS := Friction(A.Mat.StaticFriction, B.Mat.StaticFriction);
+               if (abs ImpulseScalarTan) < (MuS * ImpulseScalar) then
+                  FrictionImpulse := ImpulseScalarTan * Tangent;
+               else
+                  MuC := Friction(A.Mat.DynamicFriction, B.Mat.DynamicFriction);
+                  FrictionImpulse := -ImpulseScalar * Tangent * MuC;
+               end if;
 
-            if (abs ImpulseScalarTan) < (MuS * ImpulseScalar) then
-               FrictionImpulse := ImpulseScalarTan * Tangent;
-            else
-               MuC := Friction(A.Mat.DynamicFriction, B.Mat.DynamicFriction);
-               FrictionImpulse := -ImpulseScalar * Tangent * MuC;
-            end if;
-
-            A.Velocity := A.Velocity - (A.InvMass * FrictionImpulse);
-            B.Velocity := B.Velocity + (B.InvMass * FrictionImpulse);
-         end;
+               A.Velocity := A.Velocity - (A.InvMass * FrictionImpulse);
+               B.Velocity := B.Velocity + (B.InvMass * FrictionImpulse);
+            end;
+         end if;
       end if;
 
    end Resolve;

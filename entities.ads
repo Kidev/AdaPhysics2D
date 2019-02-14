@@ -14,13 +14,13 @@ package Entities is
    -- Lists the minimum fields for an entity to exist
    type Entity is abstract tagged record
       EntityType : EntityTypes;
-      Coords : Vec2D;
-      Velocity : Vec2D;
-      Force : Vec2D;
+      Coords : Vec2D := (0.0, 0.0);
+      Velocity : Vec2D := (0.0, 0.0);
+      Force : Vec2D := (0.0, 0.0);
       InvMass : Float;
       Mass : Float;
       Mat : Material;
-      Gravity : Vec2D;
+      Gravity : Vec2D := (0.0, 0.0);
       Layer : Byte := 2#00000001#;
    end record;
    pragma Pack (Entity);

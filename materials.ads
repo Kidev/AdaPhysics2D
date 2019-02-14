@@ -5,7 +5,7 @@ package Materials is
    type MaterialType is (MTConcrete, MTWood, MTSteel, MTRubber, MTIce, MTBalloon, MTStatic,
                          ETVacuum, ETAir, ETWater);
 
-   type Material is record
+   type Material is tagged record
       MType : MaterialType;
       Density : Float;
       Restitution : Float; -- tension of surface for water ? TODO investigate
@@ -14,6 +14,20 @@ package Materials is
       Viscosity : Float; -- only for non solid, ignored otherwise
    end record;
    pragma Pack (Material);
+   
+   -- Allows you to transform any material into a static one
+   function SetStatic(This : Material) return Material;
+   
+   -- Allows you to change friction for a material
+   -- Disables it by default
+   function SetFriction(This : Material; FStatic, FDynamic : Float := 0.0) return Material;
+   
+   -- Allows you to change restitution for a material
+   -- Disables it by default
+   function SetRestitution(This : Material; Rest : Float := 0.0) return Material;
+   
+   -- Tells if a material is a solid
+   function IsSolidMaterial(This : Material) return Boolean;
    
    -- Solid
    CONCRETE : constant Material := (MTConcrete, 2.3, 0.3, 0.1, 0.05, 0.0);
@@ -28,15 +42,5 @@ package Materials is
    VACUUM : constant Material := (ETVacuum, 0.0, 0.0, 0.0, 0.0, 0.0);
    AIR : constant Material := (ETAir, 0.001225, 0.0, 0.0, 0.0, 0.000018);
    WATER : constant Material := (ETWater, 1.0, 0.0, 0.0, 0.0, 0.001);
-   
-   -- Allows you to transform any material into a static one
-   function SetStatic(This : Material) return Material;
-   
-   -- Allows you to change friction for a material
-   -- Disables it by default
-   function SetFriction(This : Material; FStatic, FDynamic : Float := 0.0) return Material;
-   
-   -- Tells if a material is a solid
-   function IsSolidMaterial(This : Material) return Boolean;
 
 end Materials;
