@@ -54,21 +54,23 @@ package body Physics is
       LC := This.Links.First;
       while LC /= LinksList.No_Element loop
          CurLink := LinksList.Element(LC);
-         A := CurLink.A;
-         B := CurLink.B;
-         LinkDistance := GetDistance(A.all, B.all);
-         Penetration := LinkDistance - CurLink.RestLen;
-         if Penetration > 0.0 then
-            NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
-            if A.InvMass /= 0.0 then
-               Col := (A, This.StaticEnt, -NormalAB, Penetration);
-               Resolve(Col);
-               PosCorrection(Col);
-            end if;
-            if B.InvMass /= 0.0 then
-               Col := (B, This.StaticEnt, NormalAB, Penetration);
-               Resolve(Col);
-               PosCorrection(Col);
+         if CurLink.LinkType = LTRope then
+            A := CurLink.A;
+            B := CurLink.B;
+            LinkDistance := GetDistance(A.all, B.all);
+            Penetration := LinkDistance - CurLink.RestLen;
+            if Penetration > 0.0 then
+               NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
+               if A.InvMass /= 0.0 then
+                  Col := (A, This.StaticEnt, -NormalAB, Penetration);
+                  Resolve(Col);
+                  PosCorrection(Col);
+               end if;
+               if B.InvMass /= 0.0 then
+                  Col := (B, This.StaticEnt, NormalAB, Penetration);
+                  Resolve(Col);
+                  PosCorrection(Col);
+               end if;
             end if;
          end if;
          LC := LinksList.Next(LC);
@@ -136,19 +138,21 @@ package body Physics is
       LC := This.Links.First;
       while LC /= LinksList.No_Element loop
          CurLink := LinksList.Element(LC);
-         A := CurLink.A;
-         B := CurLink.B;
-         LinkDistance := GetDistance(A.all, B.all);
-         Penetration := LinkDistance - CurLink.RestLen;
-         if Penetration > 0.0 then
-            NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
-            if A.InvMass /= 0.0 then
-               Col := (A, This.StaticEnt, -NormalAB, Penetration);
-               This.Cols.Append(Col);
-            end if;
-            if B.InvMass /= 0.0 then
-               Col := (B, This.StaticEnt, NormalAB, Penetration);
-               This.Cols.Append(Col);
+         if CurLink.LinkType = LTRope then
+            A := CurLink.A;
+            B := CurLink.B;
+            LinkDistance := GetDistance(A.all, B.all);
+            Penetration := LinkDistance - CurLink.RestLen;
+            if Penetration > 0.0 then
+               NormalAB := (1.0 / LinkDistance) * (B.GetPosition - A.GetPosition);
+               if A.InvMass /= 0.0 then
+                  Col := (A, This.StaticEnt, -NormalAB, Penetration);
+                  This.Cols.Append(Col);
+               end if;
+               if B.InvMass /= 0.0 then
+                  Col := (B, This.StaticEnt, NormalAB, Penetration);
+                  This.Cols.Append(Col);
+               end if;
             end if;
          end if;
          LC := LinksList.Next(LC);
