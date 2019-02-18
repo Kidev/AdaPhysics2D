@@ -1,6 +1,6 @@
 package Vectors2D with SPARK_Mode => On is
 
-   type Vec2D is record
+   type Vec2D is tagged record
       x : Float := 0.0;
       y : Float := 0.0;
    end record;
@@ -27,6 +27,8 @@ package Vectors2D with SPARK_Mode => On is
    function "/" (Left : Vec2D; Right : Float) return Vec2D;
 
    function MagSq(This : Vec2D) return Float;
+
+   function Normal(This : Vec2D) return Vec2D;
 
    function Mag(This : Vec2D) return Float with SPARK_Mode => Off;
 

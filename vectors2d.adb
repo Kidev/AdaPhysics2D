@@ -75,6 +75,11 @@ package body Vectors2D is
       return This / Norm;
    end Normalize;
 
+   function Normal(This : Vec2D) return Vec2D is
+   begin
+      return (-This.y, This.x);
+   end Normal;
+
    function Clamp(Value, Min, Max : Float) return Float
    is
    begin
