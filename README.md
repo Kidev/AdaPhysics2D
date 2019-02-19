@@ -16,3 +16,6 @@ This is a 2D physics engine for Ada. Check the wiki page to see how to use it wi
 * Liquid friction
 * Archimede's principle
 * Ropes and springs to link entities
+
+# Projects using this engine
+[DemoAdaPhysics2D](https://github.com/Kidev/DemoAdaPhysics2D)
